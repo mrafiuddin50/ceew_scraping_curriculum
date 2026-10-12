@@ -1,0 +1,990 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scraping Field Course</title>
+<meta name="description" content="A self-paced web scraping course for CEEW researchers who don't code: Claude-first core modules built around IMD weather data, plus an optional Colab and Apps Script track.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Noto+Sans:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{color-scheme:light}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+/* Layout: sticky module index on the left, one reading column on the right; stacks to one column on phones.
+   Difficulty levels borrow IMD's own warning colours (green / yellow / orange / red). */
+:root{
+  --bg:#f3f6f7; --surface:#ffffff; --ink:#13232b; --muted:#53656e; --line:#d5dfe3;
+  --accent:#1c5d99; --accent-soft:#e3eef8;
+  --green:#2f7d4a; --green-bg:#e4f2e8; --yellow:#8a6a00; --yellow-bg:#fbf1c7;
+  --orange:#a8510f; --orange-bg:#fbe5d3; --red:#a32626; --red-bg:#f8dede;
+  --code-bg:#0f1d24; --code-fg:#d9e6ec;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Noto Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0e171c; --surface:#15222a; --ink:#e3ecef; --muted:#9db0b8; --line:#2a3b44;
+  --accent:#7db4e6; --accent-soft:#1b3347;
+  --green:#7fcf98; --green-bg:#173323; --yellow:#e8c95a; --yellow-bg:#3a3114;
+  --orange:#f0a46a; --orange-bg:#3d2615; --red:#f08c8c; --red-bg:#3d1b1b;
+  --code-bg:#091116; --code-fg:#d9e6ec; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0e171c; --surface:#15222a; --ink:#e3ecef; --muted:#9db0b8; --line:#2a3b44;
+  --accent:#7db4e6; --accent-soft:#1b3347;
+  --green:#7fcf98; --green-bg:#173323; --yellow:#e8c95a; --yellow-bg:#3a3114;
+  --orange:#f0a46a; --orange-bg:#3d2615; --red:#f08c8c; --red-bg:#3d1b1b;
+  --code-bg:#091116; --code-fg:#d9e6ec; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.65;padding-inline:16px;padding-block:0 64px}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.2;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,5vw,3.1rem);font-weight:700;letter-spacing:-.01em}
+h2{font-size:1.65rem;font-weight:700}
+h3{font-size:1.12rem;font-weight:700;margin-top:6px}
+p{margin:0}
+code{font-family:var(--f-mono);font-size:.88em;background:var(--accent-soft);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.wrap{max-width:1180px;margin:0 auto}
+.masthead{padding-block:40px 28px;border-bottom:1px solid var(--line);display:grid;gap:14px}
+.eyebrow{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lede{max-width:66ch;font-size:1.08rem;color:var(--muted)}
+.meta-row{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:.88rem;color:var(--muted)}
+.meta-row b{color:var(--ink);font-weight:600}
+.layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:40px;padding-top:28px}
+nav.index{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);align-self:start;font-size:.9rem;max-height:calc(100vh - 32px);overflow:auto}
+nav.index ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+nav.index a{display:flex;gap:10px;align-items:baseline;padding:6px 8px;border-radius:6px;color:var(--ink);text-decoration:none}
+nav.index a:hover{background:var(--accent-soft)}
+nav.index .n{font-family:var(--f-mono);font-size:.75rem;color:var(--muted);min-width:1.6em}
+nav.index .tick{margin-left:auto;color:var(--green);font-weight:600;visibility:hidden}
+nav.index a.done .tick{visibility:visible}
+nav.index .group{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:14px 8px 4px}
+.progress{margin:0 8px 12px;font-size:.8rem;color:var(--muted)}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;width:0;background:var(--green);transition:width .3s}
+main{min-width:0;display:grid;gap:56px}
+section{display:grid;gap:16px;scroll-margin-top:16px}
+section > p, section > ul, section > ol{max-width:68ch}
+.sec-head{display:grid;gap:6px;border-top:2px solid var(--ink);padding-top:14px}
+.sec-head .eyebrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.time{color:var(--muted)}
+.level{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;font-weight:600}
+.lv-green{background:var(--green-bg);color:var(--green)}
+.lv-yellow{background:var(--yellow-bg);color:var(--yellow)}
+.lv-orange{background:var(--orange-bg);color:var(--orange)}
+.lv-red{background:var(--red-bg);color:var(--red)}
+ul,ol{padding-left:1.3em;margin:0;display:grid;gap:6px}
+.ladder{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.rung{background:var(--surface);border:1px solid var(--line);border-top:5px solid;border-radius:6px;padding:14px;display:grid;gap:6px;align-content:start;font-size:.92rem}
+.rung h3{margin:0;font-size:1rem}
+.rung.g{border-top-color:var(--green)} .rung.y{border-top-color:var(--yellow)} .rung.o{border-top-color:var(--orange)} .rung.r{border-top-color:var(--red)}
+.rung .ex{color:var(--muted);font-size:.85rem}
+.imd{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;padding:16px 18px;display:grid;gap:10px;max-width:none}
+.imd .tag{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.imd ol, .imd ul{max-width:66ch}
+.transfer{display:grid;gap:6px;padding:12px 16px;border:1px dashed var(--line);border-radius:6px;font-size:.94rem}
+.transfer b{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.prompt{background:var(--surface);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.prompt-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:.82rem;color:var(--muted)}
+.prompt-head span{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase}
+.prompt pre{margin:0;padding:14px 16px;white-space:pre-wrap;font-family:var(--f-mono);font-size:.84rem;line-height:1.6;color:var(--ink)}
+button.copy{font:inherit;font-size:.8rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:5px;padding:4px 10px;cursor:pointer}
+button.copy:hover{border-color:var(--accent);color:var(--accent)}
+.code-wrap{background:var(--code-bg);border-radius:6px;overflow:hidden}
+.code-wrap .prompt-head{border-bottom-color:#22343d;color:#9db0b8}
+.code-wrap button.copy{background:#16262e;color:#d9e6ec;border-color:#2a3b44}
+.code-wrap pre{margin:0;padding:14px 16px;overflow-x:auto;font-family:var(--f-mono);font-size:.8rem;line-height:1.55;color:var(--code-fg)}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;font-size:.85rem}
+.flow .step{flex:1 1 180px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:grid;gap:4px}
+.flow .step code{font-size:.78rem}
+.flow .arrow{align-self:center;color:var(--muted);font-family:var(--f-mono)}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.88rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--bg)}
+tr:last-child td{border-bottom:none}
+.try{display:flex;gap:12px;align-items:flex-start;background:var(--accent-soft);border-radius:6px;padding:14px 16px}
+.try input{width:20px;height:20px;margin-top:3px;flex:none;accent-color:var(--green)}
+.try label{display:grid;gap:4px;cursor:pointer}
+.try label b{font-family:var(--f-display)}
+.warn{background:var(--yellow-bg);color:var(--ink);border-radius:6px;padding:12px 16px;font-size:.93rem;max-width:none}
+.warn b{color:var(--yellow)}
+details{background:var(--surface);border:1px solid var(--line);border-radius:6px}
+details > summary{cursor:pointer;padding:10px 14px;font-weight:600}
+details > div{padding:0 14px 14px;display:grid;gap:10px}
+.gotchas{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.gotcha{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;gap:6px;align-content:start;font-size:.92rem}
+.gotcha .sym{font-family:var(--f-mono);font-size:.78rem;color:var(--muted)}
+.checklist{list-style:none;padding:0;display:grid;gap:8px}
+.checklist li{display:flex;gap:10px;align-items:flex-start}
+.checklist li::before{content:"";flex:none;width:14px;height:14px;border:1.5px solid var(--muted);border-radius:3px;margin-top:5px}
+.sources li{overflow-wrap:anywhere}
+details.answer{border-color:var(--green);background:var(--surface)}
+details.answer > summary{color:var(--green)}
+details.answer ul, details.answer ol{max-width:66ch}
+.steps{list-style:none;padding:0;display:grid;gap:12px;counter-reset:s}
+.steps > li{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;display:grid;gap:8px;counter-increment:s}
+.steps > li > b::before{content:counter(s) ". ";font-family:var(--f-mono);color:var(--muted)}
+.ifnot{font-size:.9rem;color:var(--muted)}
+.tracker{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;display:grid;gap:14px}
+.tracker .row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:end}
+.field{display:grid;gap:4px;font-size:.85rem;min-width:0;flex:1 1 220px}
+.field label{font-weight:600}
+.field select,.field input{font:inherit;font-size:.92rem;padding:7px 9px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--ink);width:100%}
+button.primary{font:inherit;font-size:.88rem;font-weight:600;border:0;background:var(--accent);color:var(--surface);border-radius:5px;padding:8px 14px;cursor:pointer}
+button.primary:disabled{opacity:.5;cursor:default}
+.status{font-size:.85rem;color:var(--muted)}
+.status.err{color:var(--red)}
+.who{display:flex;align-items:center;gap:8px}
+.who img{width:22px;height:22px;border-radius:50%;flex:none}
+.pips{display:flex;gap:3px}
+.pips i{width:10px;height:10px;border-radius:2px;background:var(--line)}
+.pips i.on{background:var(--green)}
+.states{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;font-size:.84rem}
+.states span{display:flex;justify-content:space-between;gap:8px;padding:5px 8px;border:1px solid var(--line);border-radius:5px;background:var(--bg)}
+.states span.taken{opacity:.55;text-decoration:line-through}
+.states span.mine{border-color:var(--green);background:var(--green-bg);opacity:1;text-decoration:none}
+.states b{font-family:var(--f-mono);font-weight:400;color:var(--muted)}
+footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-size:.85rem;color:var(--muted);display:grid;gap:6px}
+@media (max-width:860px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  nav.index{position:static;max-height:none;border:1px solid var(--line);border-radius:6px;padding:8px;background:var(--surface)}
+}
+@media (prefers-reduced-motion:reduce){ .bar i{transition:none} html{scroll-behavior:auto} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="eyebrow">CEEW · Self-paced · For researchers who don't code</div>
+    <h1>Scraping Field Course</h1>
+    <p class="lede">Learn to collect data from websites with Claude doing the coding. The worked example throughout is IMD's Local Weather Report and Forecast site, but every module ends with how the same move works on other sites. An optional second track takes you from Claude's answer to a notebook and a daily pipeline.</p>
+    <div class="meta-row">
+      <span><b>11 core modules</b> · about 5–6 hours</span>
+      <span><b>Track B</b> (optional) · about 4 hours</span>
+      <span><b>Tools:</b> Claude with a browser, Google Colab and Google Sheets. Nothing to install on your computer.</span>
+      <span><b>Site behaviour checked:</b> 12 October 2026</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="index" aria-label="Modules">
+      <div class="progress"><span id="progText">0 of 11 modules done</span><div class="bar"><i id="progBar"></i></div></div>
+      <ol>
+        <li class="group">Before you start</li>
+        <li><a href="#setup"><span class="n">–</span>Setup check</a></li>
+        <li><a href="#tracker"><span class="n">–</span>Your state and progress</a></li>
+        <li class="group">Modules</li>
+        <li><a href="#m0"><span class="n">00</span>Start here<span class="tick">✓</span></a></li>
+        <li><a href="#m1"><span class="n">01</span>Should you scrape?<span class="tick">✓</span></a></li>
+        <li><a href="#m2"><span class="n">02</span>How pages carry data<span class="tick">✓</span></a></li>
+        <li><a href="#m3"><span class="n">03</span>Recon before you collect<span class="tick">✓</span></a></li>
+        <li><a href="#m4"><span class="n">04</span>Tables you can see<span class="tick">✓</span></a></li>
+        <li><a href="#m5"><span class="n">05</span>Find the hidden data feed<span class="tick">✓</span></a></li>
+        <li><a href="#m6"><span class="n">06</span>Collect: Claude or Colab<span class="tick">✓</span></a></li>
+        <li><a href="#m7"><span class="n">07</span>Clean and validate<span class="tick">✓</span></a></li>
+        <li><a href="#m8"><span class="n">08</span>Repeat and document<span class="tick">✓</span></a></li>
+        <li><a href="#m9"><span class="n">09</span>Files, pages and forms<span class="tick">✓</span></a></li>
+        <li><a href="#m10"><span class="n">10</span>Capstone: a new site<span class="tick">✓</span></a></li>
+        <li class="group">Optional</li>
+        <li><a href="#trackb"><span class="n">B</span>Track B: to a pipeline<span class="tick">✓</span></a></li>
+        <li class="group">Reference</li>
+        <li><a href="#prompts"><span class="n">P</span>Prompt library</a></li>
+        <li><a href="#gotchas"><span class="n">G</span>Gotcha field guide</a></li>
+        <li><a href="#trouble"><span class="n">T</span>Troubleshooting</a></li>
+        <li><a href="#checklist"><span class="n">C</span>One-page checklist</a></li>
+        <li><a href="#sources"><span class="n">S</span>Sources</a></li>
+      </ol>
+    </nav>
+
+    <main>
+      <!-- Setup -->
+      <section id="setup">
+        <div class="sec-head">
+          <div class="eyebrow"><span>Before you start</span><span class="time">10 min</span></div>
+          <h2>Setup check</h2>
+        </div>
+        <p>Do these four checks before Module 00. Nothing here installs anything on your computer. Each takes a minute or two. If one fails, sort it out now; otherwise you'll get stuck halfway through the course.</p>
+        <ol class="steps">
+          <li>
+            <b>Claude can open web pages</b>
+            <span>Open Claude (Cowork, or Claude in Chrome) and send this prompt:</span>
+            <div class="prompt"><div class="prompt-head"><span>Prompt · setup test</span><button class="copy" type="button">Copy</button></div><pre>Open https://city.imd.gov.in/citywx/responsive/ in your browser. Tell me the station name shown at the top of the page and its maximum temperature.</pre></div>
+            <span><b style="font-weight:600">Pass:</b> Claude names a station (usually New Delhi-Safdarjung) and gives a temperature in °C. It may first ask your permission to use the site; allow it.</span>
+            <span class="ifnot">If Claude says it can't open the page, or only finds a title: it is reading the page without a browser. Make sure you're in Cowork or Claude in Chrome, not a plain chat, and ask the course owner if you're unsure.</span>
+          </li>
+          <li>
+            <b>Developer tools open</b>
+            <span>On the IMD page in Chrome or Edge, press <b>F12</b> (Mac: <b>Cmd + Option + I</b>).</span>
+            <span><b style="font-weight:600">Pass:</b> a panel opens with tabs including Elements, Console and Network.</span>
+            <span class="ifnot">If nothing opens, your laptop may block it. You can still do Module 05 by asking Claude to watch the network requests for you (the prompt is in that module).</span>
+          </li>
+          <li>
+            <b>Google Sheets and Colab</b>
+            <span>Open <a href="https://sheets.google.com" target="_blank" rel="noopener">sheets.google.com</a> with your CEEW account and create a blank sheet. Then open the <a href="https://colab.research.google.com/github/mrafiuddin50/ceew_scraping_curriculum/blob/main/notebooks/IMD_station_collector.ipynb" target="_blank" rel="noopener">IMD station collector in Colab</a> and run Steps 1 to 3 only. Colab may warn that the notebook isn't from Google; that's expected for a notebook stored on GitHub.</span>
+            <span><b style="font-weight:600">Pass:</b> Step 3 prints "Connected" and a station count for your state.</span>
+            <span class="ifnot">If Step 3 can't reach IMD, you can still do the course with Claude's browser; tell the course owner what the message said.</span>
+          </li>
+          <li>
+            <b>Claim a state below</b>
+            <span>Each person collects a different state, so the cohort doesn't send all its requests to the same stations at once, and your results are your own to check.</span>
+            <span><b style="font-weight:600">Pass:</b> your name and state are in the cohort tracker sheet.</span>
+          </li>
+        </ol>
+      </section>
+
+      <!-- Tracker -->
+      <section id="tracker">
+        <div class="sec-head">
+          <div class="eyebrow"><span>Before you start</span></div>
+          <h2>Your state and progress</h2>
+        </div>
+        <p>Each researcher collects a different state, so the cohort doesn't send all its requests to the same stations at once, and your results are your own to check. Pick a state nobody else in your cohort has, then add yourself to the <a href="https://docs.google.com/spreadsheets/d/1xdPgCzIkxTAHl6BblUlIGO-IGgz-H-8rVYEnezqIxyQ/edit" target="_blank" rel="noopener">cohort tracker sheet</a> (ask the course owner for access). Update the sheet as you finish modules, and paste your capstone link there.</p>
+        <p>The ticks on this page are saved in your browser only, so you can see where you left off.</p>
+        <div class="tracker">
+          <div class="row">
+            <div class="field"><label for="stateSel">Your state (saved in this browser)</label><select id="stateSel"><option value="">Choose a state…</option></select></div>
+          </div>
+          <span class="status" id="trackerStatus"></span>
+          <details>
+            <summary>Station count by state (12 Oct 2026)</summary>
+            <div>
+              <p class="status">States marked ✓ suit practice: 10 to 45 stations, so a run at one request every 2 seconds takes under two minutes. Larger states work too but take longer.</p>
+              <div class="states" id="stateGrid"></div>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- 00 -->
+      <section id="m0">
+        <div class="sec-head">
+          <div class="eyebrow"><span>Module 00</span><span class="time">15 min</span></div>
+          <h2>Start here</h2>
+        </div>
+        <p>Scraping means getting a computer to read a website and write what it finds into a spreadsheet, so you don't have to copy it by hand. You will not write code in this course. Claude writes it. Your job is the part Claude can't do well alone: deciding what to collect, spotting when the data is wrong, and knowing when to stop.</p>
+        <p>Websites range from easy to off-limits. This course uses IMD's own warning colours as a difficulty scale, so you can place any new site on it within a few minutes.</p>
+        <div class="ladder">
+          <div class="rung g"><span class="level lv-green">Green</span><h3>The data is on the page</h3><p>A table you can see, select and copy. Claude can usually read it directly.</p><p class="ex">IMD climate tables (Module 04)</p></div>
+          <div class="rung y"><span class="level lv-yellow">Yellow</span><h3>The data loads after the page</h3><p>The page fills itself in from a hidden data feed. You find the feed, then collect from it.</p><p class="ex">IMD city weather (Modules 05–06)</p></div>
+          <div class="rung o"><span class="level lv-orange">Orange</span><h3>The site has rules and traps</h3><p>Pages of results, filters, rate limits, session memory or misleading errors. Collectable, with care.</p><p class="ex">IMD session behaviour; CCAC resource library</p></div>
+          <div class="rung r"><span class="level lv-red">Red</span><h3>Stop and ask</h3><p>Logins, CAPTCHAs, paywalls, personal data, or terms that forbid it. Request the data instead.</p><p class="ex">Official IMD station records (Module 01)</p></div>
+        </div>
+        <div class="imd">
+          <span class="tag">The worked example</span>
+          <p><a href="https://city.imd.gov.in/citywx/responsive/" target="_blank" rel="noopener">city.imd.gov.in/citywx/responsive</a> shows, for each IMD station, the last 24 hours (max and min temperature, rainfall, humidity) and a 7-day forecast with warnings. A left-hand menu lists stations by state. Open it in a new tab now and keep it open.</p>
+        </div>
+        <div class="try"><input type="checkbox" id="done-m0" data-mod="m0"><label for="done-m0"><b>Done when</b><span>you've opened the IMD page, clicked two stations in different states, and can say in one sentence what data each station shows.</span></label></div>
+        <details class="answer"><summary>Check your answer</summary><div>
+          <p>Each station shows a "Past 24 Hours" panel (maximum and minimum temperature with departure from normal, rainfall, and relative humidity at 08:30 and 17:30 IST), sunrise, sunset, moonrise and moonset, and a 7-day forecast with temperatures, humidity, a short description and a colour-coded warning for each day.</p>
+          <p>Many smaller stations show blanks for some of these. That's normal, and Module 07 deals with it.</p>
+        </div></details>
+      </section>
+
+      <!-- 01 -->
+      <section id="m1">
+        <div class="sec-head">
+          <div class="eyebrow"><span>Module 01</span><span class="time">20 min</span></div>
+          <h2>Should you scrape at all?</h2>
+        </div>
+        <p>Ask these four questions before you collect anything. If any answer worries you, talk to your team lead first, and take legal or contractual questions to the relevant internal team.</p>
+        <ol>
+          <li><b>Is there an official route?</b> A download button, an open-data portal, an API, or a data request process. Official data comes with documentation and is easier to defend in a publication.</li>
+          <li><b>What do the site's terms say?</b> Look for "terms of use", "copyright policy" or "data policy" links in the footer. Also open <code>/robots.txt</code> on the site. A missing robots file does not mean permission.</li>
+          <li><b>Is any of it personal data?</b> Names, phone numbers, addresses of individuals. If so, stop and check with your team lead.</li>
+          <li><b>Could your collecting harm the site?</b> Thousands of rapid requests can slow a government server for everyone. Module 06 covers pacing.</li>
+        </ol>
+        <div class="imd">
+          <span class="tag">IMD in practice</span>
+          <ul>
+            <li>On 12 October 2026, <code>city.imd.gov.in/robots.txt</code> returned a "not found" page, so the site states no crawling rules there.</li>
+            <li>IMD supplies historical station data on request. The procedure published by its Regional Meteorological Centre in New Delhi says the data is chargeable, that it is "only meant for the purpose mentioned in their request letter", and that it must not be passed on to other users.</li>
+            <li>So the scraped city page is fine for current conditions and forecasts, and for building your own daily record. For a long, publication-grade history of observations, the official request is the better source.</li>
+          </ul>
+        </div>
+        <div class="prompt"><div class="prompt-head"><span>Try it · robots.txt</span><button class="copy" type="button">Copy</button></div><pre>Open [site]/robots.txt for these two sites: [site 1], [site 2].
+For each, tell me in plain English: does the file exist; which parts of the site it asks automated tools to avoid; whether it sets a delay between requests; and whether the pages I need are affected. Then find each site's terms of use or data policy page and tell me what it says about copying or reusing data, quoting the exact sentence.</pre></div>
+        <div class="transfer"><b>On other sites</b><span>Look for the official route first, every time. Scraping is the fallback when no download exists or when the official route is too slow for the decision you need to make.</span></div>
+        <div class="try"><input type="checkbox" id="done-m1" data-mod="m1"><label for="done-m1"><b>Done when</b><span>you can name the official alternative to scraping for one dataset you use in your own work, and you've read the robots.txt file of two sites you rely on.</span></label></div>
+        <details class="answer"><summary>Check your answer</summary><div>
+          <p>A good answer names a specific route, not just "the website": for example, a downloadable file on the agency's site, an open-data portal, a documented API, or a written data request to the agency. For IMD's historical station data, the route is a data request to a Regional Meteorological Centre (chargeable, and limited to the stated purpose).</p>
+          <p>If you can't find an official route for your dataset, write that down too. It's the reason you're scraping.</p>
+        </div></details>
+      </section>
+
+      <!-- 02 -->
+      <section id="m2">
+        <div class="sec-head">
+          <div class="eyebrow"><span>Module 02</span><span class="time">25 min</span></div>
+          <h2>How web pages carry data</h2>
+        </div>
+        <p>Every page reaches you in one of two ways, and the difference decides your whole approach.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Type</th><th>What happens</th><th>How to tell</th><th>IMD example</th></tr></thead>
+          <tbody>
+            <tr><td><span class="level lv-green">Static</span></td><td>The server sends the finished page with the numbers already in it.</td><td>Right-click → <b>View page source</b>. Press Ctrl+F and search for a number you can see on screen. It's there.</td><td>Climate page for a station: <code>…/citywx/extreme/climate.php?id=42182</code></td></tr>
+            <tr><td><span class="level lv-yellow">Dynamic</span></td><td>The server sends an empty shell. Code in the page then asks a hidden data feed for the numbers and draws them.</td><td>The number you can see is <i>not</i> in the page source.</td><td>The main city weather page</td></tr>
+          </tbody>
+        </table></div>
+        <div class="imd">
+          <span class="tag">Try the source test on IMD</span>
+          <ol>
+            <li>On the city weather page, note today's maximum temperature for New Delhi-Safdarjung.</li>
+            <li>Right-click → View page source. Search for that number. It isn't there. The source is a page titled "Local Weather Report" with almost nothing in it.</li>
+            <li>Now open <a href="https://city.imd.gov.in/citywx/extreme/climate.php?id=42182" target="_blank" rel="noopener">the Safdarjung climate page</a>, view source, and search for "1991-2020". It's there, in a plain HTML table.</li>
+          </ol>
+          <p>This is why an AI tool that "reads" a web page can come back with nothing. When we asked Claude's basic web reader to describe the city weather page, it reported a title and no data. It hadn't failed. The data simply isn't in the page it received.</p>
+        </div>
+        <h3>What the site says back</h3>
+        <p>Every reply from a website carries a three-digit status code. You'll see them in the Network tab (Module 05), in Colab messages and in Claude's reports. Five are worth knowing.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Code</th><th>Means</th><th>What to do</th></tr></thead>
+          <tbody>
+            <tr><td>200</td><td>OK, here's the reply</td><td>Still check the reply itself: IMD answers some requests for missing stations with an error message inside a normal reply</td></tr>
+            <tr><td>301 / 302</td><td>Moved; go to this other address</td><td>Check where you ended up. A redirect to the home page can mean your filters were dropped</td></tr>
+            <tr><td>403</td><td>Forbidden</td><td>The site refuses this request. Stop and see Troubleshooting</td></tr>
+            <tr><td>404</td><td>Not found</td><td>Wrong address, or the page was removed</td></tr>
+            <tr><td>429</td><td>Too many requests</td><td>You went too fast. Stop, wait, slow down</td></tr>
+          </tbody>
+        </table></div>
+        <div class="transfer"><b>On other sites</b><span>Run the source test first on any new site. It takes 30 seconds and tells you whether you're at green or yellow.</span></div>
+        <div class="try"><input type="checkbox" id="done-m2" data-mod="m2"><label for="done-m2"><b>Done when</b><span>you've run the source test on both IMD pages and on one other site you use for work.</span></label></div>
+        <details class="answer"><summary>Check your answer</summary><div>
+          <ul>
+            <li><b>City weather page:</b> dynamic. The source is a short page titled "Local Weather Report" with no temperatures in it.</li>
+            <li><b>Climate page:</b> static. Searching the source for "1991-2020" finds it, and the monthly figures sit in a <code>&lt;table&gt;</code>. For Safdarjung, the January row reads 7.5, 20.1, 19.2, 1.7, 0.2, 1.4, 21.6, 0.1.</li>
+            <li><b>Your own site:</b> either answer is fine, as long as you checked a number you could see on screen.</li>
+          </ul>
+        </div></details>
+      </section>
+
+      <!-- 03 -->
+      <section id="m3">
+        <div class="sec-head">
+          <div class="eyebrow"><span>Module 03</span><span class="time">25 min</span></div>
+          <h2>Recon before you collect</h2>
+        </div>
+        <p>Before anyone writes code, map the site. You want to know what exists, how it's organised, how many items there are, and how you'd know if you'd missed some. Ask Claude to do this with you, and tell it explicitly not to extract anything yet.</p>
+        <div class="prompt"><div class="prompt-head"><span>Prompt · recon</span><button class="copy" type="button">Copy</button></div><pre>Open [URL] in your browser. Don't extract any data yet. I want a map of the site:
+1. What data is shown, and for what units (cities, stations, documents, dates)?
+2. How is it organised? Menus, filters, pages of results, search?
+3. Roughly how many items are there in total, and how did you count them?
+4. Is the data in the page source, or loaded afterwards from a data feed?
+5. Is there a download button, open-data link, API page or terms of use?
+Reply in plain English. I don't code.</pre></div>
+        <div class="imd">
+          <span class="tag">What recon found on IMD (12 Oct 2026)</span>
+          <ul>
+            <li>Stations are grouped under 35 state and UT headings, with 1,729 station entries in total.</li>
+            <li>Every station has a numeric ID. Safdarjung is 42182 and Port Blair is 43333.</li>
+            <li>Station names are not unique. 21 names appear more than once with different IDs, such as "Bilaspur" (Chhattisgarh and Himachal Pradesh) and "KATHUA" (twice in Jammu &amp; Kashmir). Always keep the ID.</li>
+            <li>The site spells some states its own way ("Chhatisgarh", "Uttrakhand", "Orissa"), and some names carry trailing spaces. Expect to tidy these.</li>
+            <li>Each station's page links to a separate climate page (static), which is easier to collect.</li>
+          </ul>
+        </div>
+        <div class="transfer"><b>On other sites</b><span>Write down the total count at the start. It's your yardstick later: if the site says 1,729 and your spreadsheet has 1,602 rows, you know to investigate.</span></div>
+        <div class="try"><input type="checkbox" id="done-m3" data-mod="m3"><label for="done-m3"><b>Done when</b><span>you've run the recon prompt on IMD and written down the station count, the ID format and one surprise.</span></label></div>
+        <details class="answer"><summary>Check your answer</summary><div>
+          <ul>
+            <li><b>Count:</b> 1,729 stations in 35 state and UT groups on 12 October 2026. The number may have changed since; what matters is that Claude explains how it counted. A count with no method is a guess.</li>
+            <li><b>IDs:</b> numbers of 4 to 6 digits, such as 42182 (Safdarjung), 99405 (UJWA) and 101101.</li>
+            <li><b>Your state:</b> the station count for your state should match the table under "Your state and progress", unless IMD has added stations.</li>
+            <li><b>Surprises worth noting:</b> repeated names with different IDs, the site's own state spellings, trailing spaces in names, and the separate climate page.</li>
+          </ul>
+          <p>If Claude reports far fewer stations, it probably counted only the ones visible on screen. Ask it to count from the full list.</p>
+        </div></details>
+      </section>
+
+      <!-- 04 -->
+      <section id="m4">
+        <div class="sec-head">
+          <div class="eyebrow"><span>Module 04</span><span class="level lv-green">Green</span><span class="time">30 min</span></div>
+          <h2>Tables you can see</h2>
+        </div>
+        <p>When the data sits in the page as a table, you have three easy routes. Use the simplest one that works.</p>
+        <ol>
+          <li><b>Copy and paste.</b> Select the table, copy, and paste into Google Sheets. Fine for one page.</li>
+          <li><b>Ask Claude to read it.</b> Give Claude the link and ask for the table as CSV. Fine for a handful of pages.</li>
+          <li><b>Pull it into Google Sheets with a formula.</b> <code>=IMPORTHTML("link", "table", 1)</code> fetches the first table on a page, and changing the 1 to a 2 fetches the second. Useful when the same layout repeats across many links. Its cousin <code>=IMPORTXML("link", "//td")</code> pulls out any part of a page you can describe; ask Claude to write the second part for you.</li>
+        </ol>
+        <div class="imd">
+          <span class="tag">IMD climate page</span>
+          <p>Each station's climate page has a predictable link: <code>https://city.imd.gov.in/citywx/extreme/climate.php?id=</code> followed by the station ID. It holds two tables:</p>
+          <ul>
+            <li><b>Table 1:</b> 15 years of monthly extremes for the current month (highest max, lowest min, heaviest 24-hour rainfall, monthly total), plus all-time records.</li>
+            <li><b>Table 2:</b> the 1991–2020 climatological normals by month (mean temperatures, rainfall, rainy days, and days with hail, thunder, fog and squall).</li>
+          </ul>
+          <p>Try <code>=IMPORTHTML("https://city.imd.gov.in/citywx/extreme/climate.php?id=42182","table",2)</code> in a blank Google Sheet. This route is unconfirmed: in our test on 12 October 2026, the formula showed <code>#REF!</code> when the sheet was read back, and we couldn't yet check it in a live browser. Some government sites block Google's servers. If you see an error, fall back to route 1 or 2, and tell the course owner what you saw.</p>
+          <p>Notice what the table is <i>not</i> telling you. On 12 October 2026 the Safdarjung table had an empty row for 2024. A blank is a gap in the source, not a zero.</p>
+        </div>
+        <div class="prompt"><div class="prompt-head"><span>Prompt · read visible tables</span><button class="copy" type="button">Copy</button></div><pre>For each of these station IDs: 42182, 43003, 43333
+open https://city.imd.gov.in/citywx/extreme/climate.php?id=[ID]
+and copy the climatological table (1991-2020) exactly as shown.
+Return one CSV with a station_id column first. Keep blanks blank.
+Don't round, convert or fill anything in. List any page that failed to load.</pre></div>
+        <div class="transfer"><b>On other sites</b><span>Look for the pattern in the link. If changing one number in the address shows you a different city, year or page, you can loop over that number. This is the single most useful habit in scraping.</span></div>
+        <div class="try"><input type="checkbox" id="done-m4" data-mod="m4"><label for="done-m4"><b>Done when</b><span>you have the 1991–2020 table for three stations in one spreadsheet, with a station ID column.</span></label></div>
+        <details class="answer"><summary>Check your answer</summary><div>
+          <p>For the three IDs in the prompt you should have 39 data rows (12 months plus "Annual" for each station). These values don't change day to day, so check yours against them:</p>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Station</th><th>Oct mean min</th><th>Oct mean max</th><th>Oct rainfall</th><th>Annual rainfall</th></tr></thead>
+            <tbody>
+              <tr><td>42182 New Delhi-Safdarjung</td><td>19.5</td><td>33</td><td>14.1</td><td>758.9</td></tr>
+              <tr><td>43003 Mumbai-Santacruz</td><td>23.9</td><td>33.6</td><td>91.3</td><td>2502.3</td></tr>
+              <tr><td>43333 Port Blair</td><td>23.8</td><td>30.2</td><td>300.9</td><td>3113.4</td></tr>
+            </tbody>
+          </table></div>
+          <p>Common slips: the "Min" and "Max" columns swapped (the table's header spans two rows), or values rounded. Note that rows such as Safdarjung's 2024 in the extremes table are empty on the site itself.</p>
+        </div></details>
+      </section>
+
+      <!-- 05 -->
+      <section id="m5">
+        <div class="sec-head">
+          <div class="eyebrow"><span>Module 05</span><span class="level lv-yellow">Yellow</span><span class="time">40 min</span></div>
+          <h2>Find the hidden data feed</h2>
+        </div>
+        <p>Dynamic pages are usually <i>easier</i> to collect from than they look, because the hidden feed is already clean, structured data. You find it with the browser's own developer tools. You only need one panel.</p>
+        <ol>
+          <li>Open the IMD city weather page in Chrome or Edge.</li>
+          <li>Press <b>F12</b> (Mac: <b>Cmd + Option + I</b>). A panel opens.</li>
+          <li>Click the <b>Network</b> tab, then the <b>Fetch/XHR</b> filter. This hides images and styling and shows only data requests.</li>
+          <li>Click a station in the left menu, say Port Blair. New rows appear in the list.</li>
+          <li>Click each new row and open its <b>Response</b> or <b>Preview</b> tab. You're looking for the one that contains the numbers you see on screen.</li>
+          <li>On that row, the <b>Headers</b> tab shows the address and the method (GET or POST). The <b>Payload</b> tab shows what the page sent.</li>
+        </ol>
+        <p><b>Tip:</b> right-click the row and choose <b>Copy › Copy as cURL</b>. This copies the exact request as text. Paste it into Claude and ask "Explain this request in plain English: where it goes, what it sends, and which parts I'd change to get a different station." Check it for anything private before you paste: on sites where you're logged in, it can include your login details.</p>
+        <div class="imd">
+          <span class="tag">What the IMD page is doing</span>
+          <div class="flow">
+            <div class="step"><b>1 · Station list</b><span>GET</span><code>…/citywx/responsive/api/</code><span>Returns every state with its station IDs and names.</span></div>
+            <div class="arrow" aria-hidden="true">→</div>
+            <div class="step"><b>2 · One station</b><span>POST, form field <code>ID</code> = station ID</span><code>…/api/fetchCity_static.php</code><span>Returns that station's observations, forecast and warnings.</span></div>
+            <div class="arrow" aria-hidden="true">→</div>
+            <div class="step"><b>3 · Climate link</b><span>Inside the reply as <code>extreme_url</code></span><code>…/extreme/climate.php?id=</code><span>The static page from Module 04.</span></div>
+          </div>
+          <p>The station reply has two parts. The first is today's record: <code>max</code>, <code>min</code>, <code>rainfall</code>, <code>rh0830</code>, <code>rh1730</code>, departures from normal, sunrise and sunset, a 7-day forecast and warning text. The second covers the past week with normal maximum and minimum temperatures (<code>MAX_N</code>, <code>MIN_N</code>) beside the actuals.</p>
+          <p class="warn"><b>Orange trap.</b> The station address does not change when you click a station, and adding <code>?ID=43333</code> to it does nothing. The server remembers which station <i>your session</i> last asked for. Open the address fresh in another browser and you get <code>"Data will be uploaded shortly"</code>, which sounds like a delay but here means "no station chosen". You have to send the ID the way the page does, as a POST.</p>
+        </div>
+        <div class="prompt"><div class="prompt-head"><span>Prompt · find the feed with Claude</span><button class="copy" type="button">Copy</button></div><pre>Open [URL] in your browser and watch the network requests.
+Then click [a station / a filter / page 2].
+Tell me which request carries the data I can see, in plain English:
+- the address, and whether it's GET or POST
+- what the page sends with it (parameters or form fields)
+- a short sample of what comes back, and which field matches which number on screen
+- whether the same request works on its own, outside the page.</pre></div>
+        <div class="transfer"><b>On other sites</b><span>Dashboards, maps and "live" pages often work this way, including many air quality and power-sector dashboards. If the source test fails, go straight to the Network tab. When Claude can't reach a site from its own sandbox, ask it to use your browser instead.</span></div>
+        <div class="try"><input type="checkbox" id="done-m5" data-mod="m5"><label for="done-m5"><b>Done when</b><span>you've found the <code>fetchCity_static.php</code> request yourself in the Network tab and matched three numbers in its response to the screen.</span></label></div>
+        <details class="answer"><summary>Check your answer</summary><div>
+          <ul>
+            <li><b>Headers tab:</b> Request URL <code>https://city.imd.gov.in/citywx/responsive/api/fetchCity_static.php</code>, Request Method <b>POST</b>.</li>
+            <li><b>Payload tab:</b> one form field, <code>ID</code>, set to <code>43333</code> for Port Blair.</li>
+            <li><b>Response:</b> starts with <code>[{"station_id":"43333",…</code> and includes <code>"station":"Port Blair"</code>, <code>"lat":"11.670000000"</code> and <code>"lon":"92.720000000"</code>.</li>
+            <li>Fields such as <code>max</code>, <code>min</code> and <code>rainfall</code> should match the Past 24 Hours panel for that day.</li>
+          </ul>
+          <p>If you see two requests with the same name, the first (a GET, when the page loads) is for the default station. The one you want is the POST that appears when you click.</p>
+        </div></details>
+      </section>
+
+      <!-- 06 -->
+      <section id="m6">
+        <div class="sec-head">
+          <div class="eyebrow"><span>Module 06</span><span class="level lv-yellow">Yellow</span><span class="time">45 min</span></div>
+          <h2>Collect: with Claude, or with a ready-made Colab notebook</h2>
+        </div>
+        <p>Now you know where the data lives, collect it for every station in the state you claimed. There are two routes. Both run away from your computer: one in Claude's browser, one on Google's servers through Colab. Nothing is installed on your machine.</p>
+        <p>A good collection request spells out five things, whichever route you take: what to loop over, how fast, what counts as missing, how to check each reply, and what to produce.</p>
+
+        <h3>Route A: Claude collects in its browser</h3>
+        <div class="prompt"><div class="prompt-head"><span>Prompt · collect with Claude</span><button class="copy" type="button">Copy</button></div><pre>Collect today's observations for every IMD station in [the state you claimed, spelled as the site spells it].
+The station list comes from GET https://city.imd.gov.in/citywx/responsive/api/
+Each station's data comes from POST .../api/fetchCity_static.php with form field ID=[station id].
+
+Do this in your browser, on the IMD page. Rules:
+1. Wait 2 seconds between requests.
+2. Treat as missing (blank): empty, NA, (), 0000-00-00, and impossible values such as 99.9 °C or 999 % humidity.
+3. Check each reply's station_id matches the ID you asked for. List failures separately, with IMD's message.
+4. Keep station_id, station, page date, max_date, max, min, rainfall, rh0830, rh1730, updated time.
+5. Give me the result as CSV text I can paste into Google Sheets, plus the failure list.
+Before you start, tell me in plain English what you'll do and what could go wrong.</pre></div>
+        <p class="warn"><b>If Claude says the script timed out.</b> Claude's browser tool stops a script after about 45 seconds, and a state with 20 or more stations at a 2-second pause takes longer. Ask Claude to "start the collection in the background, then check back until it has finished". This happened while building this course.</p>
+
+        <h3>Route B: the IMD station collector notebook</h3>
+        <p>Open the <a href="https://colab.research.google.com/github/mrafiuddin50/ceew_scraping_curriculum/blob/main/notebooks/IMD_station_collector.ipynb" target="_blank" rel="noopener">IMD station collector in Colab</a>. Then run its six steps in order with the ▶ buttons. Change settings only in Step 1. To keep your own settings or changes, choose <b>File › Save a copy in Drive</b> first.</p>
+        <ul>
+          <li>It collects today's observations, the 7-day forecast and the 14-day temperature table for each station, and optionally each station's climate page.</li>
+          <li>It waits at least 1 second between requests (2 by default) and stops after five failures in a row.</li>
+          <li>Placeholders become blanks, using physical limits for each kind of value, so a real 99 mm of rain is kept but a 99.9 °C temperature is not.</li>
+          <li>Stations with no data go on a <code>no_record</code> tab, and IMD's raw replies are kept on a <code>raw_replies</code> tab so every number can be traced.</li>
+          <li>The maximum temperature is stored with its own date (<code>max_temp_date</code>), not the page date.</li>
+          <li>Results go to a new Google Sheet, an Excel file in your Drive, or both.</li>
+        </ul>
+        <p class="warn"><b>Check the connection first.</b> Step 3 tests whether Google's servers can reach IMD. The notebook was tested on 12 October 2026 against saved IMD replies, not yet from Colab against the live site. If Step 3 fails, use Route A and tell the course owner what the message said.</p>
+        <p class="warn"><b>Safety.</b> Only run notebooks from the course folder or ones Claude wrote for you in your own conversation, and read what each step says before you press ▶. Colab will ask for permission to use your Google account when saving; that's expected for Sheets and Drive, and nothing else.</p>
+
+        <div class="transfer"><b>On other sites</b><span>The five-part request (loop, pace, missing values, checks, output) works for any site. Only the addresses and field names change. For a new site, ask Claude to write a Colab notebook with the same structure as the IMD one: settings, connection check, collect, check, save.</span></div>
+        <div class="try"><input type="checkbox" id="done-m6" data-mod="m6"><label for="done-m6"><b>Done when</b><span>you have the data for the state you claimed in a Google Sheet, by either route, and you can say how many stations returned no data.</span></label></div>
+        <details class="answer"><summary>Check your answer</summary><div>
+          <p>Live readings change every day, so check the shape of your result rather than the values:</p>
+          <ul>
+            <li>One row per station that returned data, plus a list of stations that didn't. Rows plus failures should equal your state's station count. The notebook's Step 5 prints this check for you.</li>
+            <li>Every row has a station ID, and the ID matches the station name in the site's list.</li>
+            <li>Blanks where IMD sent a placeholder. No 999, 99.9, 99.0 or NA left in the file.</li>
+            <li>The maximum temperature's date is one day before the page date.</li>
+            <li>Some stations with most fields blank. On 12 October, 7 of Delhi's 17 responding stations had no maximum temperature. Your state will have its own share.</li>
+            <li>Notebook only: 7 forecast rows and 14 temperature-table rows for each station with a record.</li>
+          </ul>
+          <p>Reference run, Delhi, 12 October 2026, 11:13 IST: 18 stations listed, 17 rows, 1 failure (UJWA, 99405).</p>
+        </div></details>
+      </section>
+
+      <!-- 07 -->
+      <section id="m7">
+        <div class="sec-head">
+          <div class="eyebrow"><span>Module 07</span><span class="level lv-orange">Orange</span><span class="time">35 min</span></div>
+          <h2>Clean and validate</h2>
+        </div>
+        <p>A collector that runs without errors can still hand you wrong data. This module is where your research judgement matters most. Never let a scraped number into a CEEW output until you've done these checks.</p>
+        <div class="imd">
+          <span class="tag">What the Delhi run actually returned</span>
+          <ul>
+            <li>18 Delhi stations were listed. 17 returned a record. One (UJWA, ID 99405) returned "Data will be uploaded shortly".</li>
+            <li>Of the 17, seven had no maximum temperature at all. Many of the newer stations report only some fields.</li>
+            <li>Departure-from-normal fields used <code>NA</code> for missing, while the page's own code treats <code>99.9</code>, <code>999</code> and <code>999.00</code> as missing too.</li>
+            <li>In Goa, five market-yard stations showed an update time of <code>0000-00-00 00:00:00</code>, which is a placeholder, not a time.</li>
+            <li>Several Goa stations showed rainfall <code>0.00</code> with every other field missing. Is that a dry day or a default? The data can't tell you. Flag it rather than assume.</li>
+            <li>The record's <code>max</code> comes with its own <code>max_date</code>, which was 11 October on a page dated 12 October. Read the date attached to each value, not just the page date.</li>
+          </ul>
+        </div>
+        <h3>Five checks for any scrape</h3>
+        <ol>
+          <li><b>Count.</b> Does the number of rows match the count from recon? Explain every gap.</li>
+          <li><b>Missing codes.</b> Find the site's placeholders (999, -99, NA, 0000-00-00, "—") and turn them into blanks. Ask Claude to scan for values that repeat suspiciously.</li>
+          <li><b>Range.</b> Temperatures above 50 °C, negative rainfall, humidity over 100%. Flag, don't delete.</li>
+          <li><b>Identity.</b> Every row keyed on an ID, and the ID in the reply matches the ID you asked for. No duplicates.</li>
+          <li><b>Spot-check.</b> Pick five random rows and compare them by eye with the live page. Note that you did it, and when.</li>
+        </ol>
+        <div class="prompt"><div class="prompt-head"><span>Prompt · validate a scrape</span><button class="copy" type="button">Copy</button></div><pre>Here is my scraped CSV from [site], collected on [date]. Recon said there should be [N] items.
+1. Compare the row count with [N] and list what's missing.
+2. Find likely placeholder values (repeated 999s, NA, zero dates, suspicious zeros).
+3. Flag out-of-range values for these fields: [field: plausible range].
+4. Check for duplicate IDs and duplicate names with different IDs.
+5. Pick 5 random rows and tell me exactly where on the live site to check each one.
+Don't change the data. Give me a list of issues and a suggested fix for each.</pre></div>
+        <h3>Practise on a known file first</h3>
+        <p>These two small files were collected from IMD on 12 October 2026. File A has some placeholders already blanked but IMD's <code>NA</code> codes left in; file B is the climate page's table exactly as shown. The problems in them are known, so you can see whether your checks catch them. Copy each into Claude with the validate prompt above (recon count for file A: 18 stations).</p>
+        <div class="code-wrap"><div class="prompt-head"><span>File A · Delhi observations, 12 Oct 2026</span><button class="copy" type="button">Copy</button></div><pre>station_id,station,date,updated,max_c,max_dep,min_c,min_dep,rain_mm,rh_0830,rh_1730,lat,lon
+42180,New Delhi-Ayanagar,2026-10-12,2026-10-12 04:05:11,30.8,-3.8,18.5,-2.4,39.00,98,70,28.480000000,77.130000000
+42181,New Delhi-Palam,2026-10-12,2026-10-12 04:02:55,30.5,-4.0,17.0,-4.5,31.00,98,68,28.570000000,77.120000000
+42182,New Delhi-Safdarjung,2026-10-12,2026-10-12 04:10:15,32.0,-2.2,18.7,-2.3,42.00,100,63,28.580000000,77.200000000
+42184,New Delhi-Ridge,2026-10-12,2026-10-12 04:03:21,30.9,-3.8,20.0,-2.1,49.00,100,69,28.680000000,77.220000000
+90141,Pusa,2026-10-12,2026-10-12 04:05:16,30.8,NA,,NA,42.00,,63,28.633333333,77.166666666
+90142,Jafarpur,2026-10-12,2026-10-12 04:02:54,30.6,NA,,NA,5.50,,,28.616666666,77.133333333
+90143,Mungeshpur,2026-10-12,2026-10-12 03:51:10,,NA,,,,,,28.816666666,76.966666666
+90144,Najafgarh,2026-10-12,2026-10-12 04:03:27,29.9,NA,,NA,0.50,,,28.600000000,77.000000000
+90145,Pitampura,2026-10-12,2026-10-12 04:04:25,31.7,NA,,NA,25.00,,77,28.683333333,77.133333333
+90146,Salwan Public School,2026-10-12,2026-10-12 04:07:20,29.6,NA,,NA,21.50,,85,28.633333333,77.183333333
+90147,Pragati Maidan,2026-10-12,2026-10-12 03:51:10,,NA,,,,,,,
+90148,Rajghat,2026-10-12,2026-10-12 03:51:10,,NA,,,,,,,
+90149,New Delhi Railway Station,2026-10-12,2026-10-12 03:51:10,,NA,,,,,,,
+90153,Qutub Minar,2026-10-12,2026-10-12 03:51:10,,NA,,,,,,,
+99921,New Delhi-Delhi University,2026-10-12,2026-10-12 03:51:10,,NA,,,,,,28.683333333,77.216666666
+99922,New Delhi-Narela,2026-10-12,2026-10-12 03:51:10,,NA,,,,,,28.850000000,77.083333333
+99923,New Delhi-Lodi Road,2026-10-12,2026-10-12 04:07:48,31.0,-2.0,18.7,-1.3,41.40,100,64,28.583333333,77.216666666</pre></div>
+        <div class="code-wrap"><div class="prompt-head"><span>File B · Safdarjung October extremes, as shown on the climate page</span><button class="copy" type="button">Copy</button></div><pre>year,highest_max,lowest_min,max_24h_rain,monthly_total_mm
+2024,(),(),(),
+2023,36.7 (10),14.3 (28),5.4 (17),5.4
+2022,35.2 (03),14.0 (25),74.3 (09),128.6
+2021,36.7 (13),14.0 (29),87.9 (18),122.5
+2020,36.7 (02),12.5 (29),0.0 (30),0.0
+2019,34.8 (04),16.5 (23),47.3 (04),47.3
+2018,35.7 (04),22.0 (25),0.0 (30),0.0
+2017,36.9 (04),23.0 (26),0.0 (30),0.0
+2016,37.4 (02),25.0 (29),63.5 (05),75.0
+2015,38.0 (27),22.5 (30),21.6 (15),21.8
+2014,40.6 (27),22.5 (30),35.8 (15),82.6
+2013,36.8 (10),36.3 (29),31.6 (01),94.4
+2012,36.9 (05),22.4 (05),24.0 (24),55.2
+2011,36.7 (15),22.7 (29),0.0 (30),0.0
+All Time,40.6 (27-Oct-2014),12.5 (29-Oct-2020),176.5 (31-Oct-1954),492.3 (Oct 1954)</pre></div>
+        <details class="answer"><summary>Check your answer: what Claude should find</summary><div>
+          <p><b>File A</b></p>
+          <ol>
+            <li>17 rows for 18 stations. UJWA (99405) is missing; it returned "Data will be uploaded shortly".</li>
+            <li><code>NA</code> in the departure columns of 12 rows. It is a placeholder and should be blank.</li>
+            <li>7 stations have no maximum temperature and no other readings (Mungeshpur, Pragati Maidan, Rajghat, New Delhi Railway Station, Qutub Minar, Delhi University, Narela).</li>
+            <li>Those same 7 share the update time 03:51:10. A shared time across silent stations looks like a batch timestamp, not an observation time.</li>
+            <li>4 stations have no coordinates (Pragati Maidan, Rajghat, New Delhi Railway Station, Qutub Minar).</li>
+            <li>The <code>date</code> column hides that <code>max_c</code> is for the previous day. Claude can't see this from the file alone; you'd only know it from recon. That's why recon notes matter.</li>
+          </ol>
+          <p><b>File B</b></p>
+          <ol>
+            <li>Each cell holds a value and a day in brackets. These need splitting into two columns before any analysis.</li>
+            <li>2024 is empty: <code>()</code> is a placeholder, not zero.</li>
+            <li>2013's lowest minimum is 36.3 °C. Every other year's lowest minimum is between 12.5 and 25.0 °C, and 36.3 is only 0.5 °C below that month's highest maximum. This is almost certainly an error on the site. Flag it; don't fix it.</li>
+            <li>2011, 2017, 2018 and 2020 show 24-hour rain of 0.0 dated the 30th. With no rain, the date carries no meaning.</li>
+            <li>"All Time" is a different kind of row from the years and shouldn't be averaged with them.</li>
+          </ol>
+          <p>If Claude found most of these, your validate prompt works. If it "fixed" any value without being asked, tighten the prompt: "Don't change the data."</p>
+        </div></details>
+        <div class="transfer"><b>On other sites</b><span>Every site has its own way of saying "no data". Find it during recon, write it down, and put it in your collector request.</span></div>
+        <div class="try"><input type="checkbox" id="done-m7" data-mod="m7"><label for="done-m7"><b>Done when</b><span>Claude has found most of the known problems in files A and B, and you've run all five checks on your own Module 06 data and spot-checked five rows against the live page.</span></label></div>
+      </section>
+
+      <!-- 08 -->
+      <section id="m8">
+        <div class="sec-head">
+          <div class="eyebrow"><span>Module 08</span><span class="time">30 min</span></div>
+          <h2>Repeat, pace and document</h2>
+        </div>
+        <p>The IMD city page only shows today and the past week. If you need a season of daily readings, you have to collect every day and keep adding to one file. That raises three questions: how to repeat it, how to stay polite, and how someone else picks it up.</p>
+        <h3>Repeat</h3>
+        <ul>
+          <li><b>Google Sheets on a timer.</b> Track B lesson B3 gives you an Apps Script that runs once a day on Google's servers and adds that day's rows to a Google Sheet. No computer needs to be on.</li>
+          <li><b>Claude on a schedule.</b> Ask Claude to set up a scheduled task that repeats your Module 06 Route A request each day.</li>
+          <li>Collect at a fixed time each day, ideally after IMD's morning update. The <code>updat</code> field tells you when each station was last refreshed.</li>
+          <li>Keep a "collected_at" column so you can tell a missed day from a missing reading.</li>
+        </ul>
+        <h3>Keep the raw replies</h3>
+        <p>Save what the site actually sent, untouched, beside your cleaned table. If someone later questions a number, or you find a cleaning mistake, you can redo the cleaning without collecting again, and IMD's page will have moved on by then. The collector notebook does this on its <code>raw_replies</code> tab.</p>
+        <h3>Pace</h3>
+        <ul>
+          <li>One request every 2 seconds is a sensible default for a government site. All 1,729 IMD stations at that pace takes about an hour, so collect only the states you need.</li>
+          <li>Stop on errors. If replies suddenly go blank or return "too many requests", wait and slow down. On the CCAC resource library, rapid requests were blocked and some pages stayed locked for over half an hour.</li>
+          <li>Run long jobs outside working hours.</li>
+        </ul>
+        <h3>Document</h3>
+        <p>Write a short scraping log the day you finish. Your future self, and anyone checking your numbers, will need it.</p>
+        <div class="prompt"><div class="prompt-head"><span>Prompt · write the scraping log</span><button class="copy" type="button">Copy</button></div><pre>Write a one-page scraping log for what we just did, under these headings:
+Source (site, pages, data feeds, with full addresses) · Date and time collected ·
+What was collected and how many rows · How the collector works, in plain English ·
+Missing-value codes and how they were handled · Traps we hit · Validation done ·
+Known gaps and caveats · How to rerun it.
+Only include things we actually observed in this conversation.</pre></div>
+        <div class="transfer"><b>On other sites</b><span>Keep the log beside the data in your project folder. A dataset without its log can't be checked or repeated.</span></div>
+        <div class="try"><input type="checkbox" id="done-m8" data-mod="m8"><label for="done-m8"><b>Done when</b><span>you have a scraping log saved next to your CSV.</span></label></div>
+        <details class="answer"><summary>Check your answer</summary><div>
+          <p>Someone who has never seen your work should be able to rerun it from the log alone. Check that yours has:</p>
+          <ul>
+            <li>Full addresses, including the data feed and whether it's GET or POST (for IMD: POST with form field <code>ID</code>).</li>
+            <li>Date and time of collection, in IST.</li>
+            <li>Row count and failure count that add up to the recon count.</li>
+            <li>The missing-value codes you blanked, listed by name.</li>
+            <li>At least one trap you hit, and what you did about it.</li>
+            <li>What you spot-checked, and when.</li>
+          </ul>
+          <p>A log that says "scraped IMD data using Claude" fails: nobody could repeat or check it.</p>
+        </div></details>
+      </section>
+
+      <!-- 09 -->
+      <section id="m9">
+        <div class="sec-head">
+          <div class="eyebrow"><span>Module 09</span><span class="level lv-orange">Orange</span><span class="time">45 min</span></div>
+          <h2>Files, pages of results and search forms</h2>
+        </div>
+        <p>IMD's data comes from a feed. Many sites you'll meet don't work that way. Three other patterns are common on Indian government and sector sites, and each needs a different move.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Pattern</th><th>How to recognise it</th><th>What to do</th></tr></thead>
+          <tbody>
+            <tr><td><b>Data in PDFs</b></td><td>Daily or weekly bulletins, reports, orders. The table is inside a PDF link.</td><td>Collect the list of PDF links first. For a few files, give the PDF to Claude and ask for each table as CSV. For many files, use the Track B lesson B2 notebook. Scanned PDFs (pictures of pages) need Claude to read the image; check every number.</td></tr>
+            <tr><td><b>Pages of results</b></td><td>"Next" buttons, <code>?page=2</code> in the address, "showing 1–15 of 3,496".</td><td>Find how the page number appears in the address. Write down the total. Check the item count on every page you collect, because some sites drop your filters without saying so.</td></tr>
+            <tr><td><b>Search forms</b></td><td>You pick a district or date and press Search; the address doesn't change, or it ends in <code>.aspx</code>.</td><td>The form carries hidden values, so you can't loop by changing the address. Ask Claude to fill in the form in its browser, one choice at a time, and record the result of each.</td></tr>
+          </tbody>
+        </table></div>
+        <div class="imd">
+          <span class="tag">Practise on a known PDF</span>
+          <p>Download <a href="practice/practice_bulletin_safdarjung.pdf" target="_blank" rel="noopener">practice_bulletin_safdarjung.pdf</a>: IMD's Safdarjung climate tables laid out as a two-page PDF bulletin. Give it to Claude with this prompt, then compare what you get with the answer below.</p>
+          <div class="prompt"><div class="prompt-head"><span>Prompt · tables from a PDF</span><button class="copy" type="button">Copy</button></div><pre>This PDF has data tables in it. For each table:
+1. Tell me the page, the table's title and how many rows and columns it has.
+2. Give me the table as CSV, exactly as printed. Keep blanks blank; don't round or fill anything in.
+3. Point out anything that will cause trouble in a spreadsheet: repeated or split headers, merged cells, two columns with the same name, totals rows, footnote marks.
+Then tell me which numbers you are least sure you read correctly.</pre></div>
+        </div>
+        <div class="imd">
+          <span class="tag">Pages of results, from earlier CEEW work</span>
+          <p>The CCAC resource library lists 3,496 items, 15 to a page. Its filters only held if the parts of the address came in a strict order, and five or more filters silently returned the full unfiltered list. Each page had to be checked against the "items found" count before its rows were trusted. Rapid requests were blocked, and some pages stayed locked for over half an hour.</p>
+        </div>
+        <div class="transfer"><b>On other sites</b><span>Ask Claude during recon (Module 03) which of these patterns a site uses. A site can mix them: a search form whose results are pages of PDF links is common.</span></div>
+        <div class="try"><input type="checkbox" id="done-m9" data-mod="m9"><label for="done-m9"><b>Done when</b><span>Claude has extracted both tables from the practice PDF and you've checked them against the answer, and you can name which pattern your capstone site uses.</span></label></div>
+        <details class="answer"><summary>Check your answer</summary><div>
+          <ul>
+            <li><b>Table 1</b> (page 1, normals 1991–2020): 13 rows (Jan–Dec plus Annual), 9 columns. Annual rainfall 758.9 mm; October mean minimum 19.5 °C and maximum 33.0 °C.</li>
+            <li><b>Table 2</b> (page 2, October extremes): 15 rows (2024 back to 2011, plus All Time), 8 columns. Three columns share the name "Day". The 2024 row is blank. All Time highest maximum 40.6 °C on 27-Oct-2014.</li>
+            <li>Trouble spots Claude should mention: the duplicate "Day" headers, the blank 2024 row, the All Time row being a different kind of row, and the note under Table 2 about the 36.3 °C value.</li>
+          </ul>
+        </div></details>
+      </section>
+
+      <!-- 10 -->
+      <section id="m10">
+        <div class="sec-head">
+          <div class="eyebrow"><span>Module 10</span><span class="time">60 min</span></div>
+          <h2>Capstone: take it to a new site</h2>
+        </div>
+        <p>Pick a site you need for your own work. Run the whole sequence, put your data and scraping log in one Drive folder, and paste its link into the <a href="https://docs.google.com/spreadsheets/d/1xdPgCzIkxTAHl6BblUlIGO-IGgz-H-8rVYEnezqIxyQ/edit" target="_blank" rel="noopener">cohort tracker sheet</a>. Your team lead or the course owner reviews it in 15 minutes against the rubric below.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Step</th><th>Module</th><th>Output</th></tr></thead>
+          <tbody>
+            <tr><td>Check terms, official route, personal data</td><td>01</td><td>Go / no-go note</td></tr>
+            <tr><td>Source test, place it on the green–red scale</td><td>02</td><td>Level</td></tr>
+            <tr><td>Recon: units, IDs, total count, link patterns</td><td>03</td><td>Site map</td></tr>
+            <tr><td>Find the data (visible table or Network tab)</td><td>04–05</td><td>Address and method</td></tr>
+            <tr><td>Five-part collection, with Claude or Colab</td><td>06</td><td>Google Sheet</td></tr>
+            <tr><td>Five checks, five spot-checks</td><td>07</td><td>Issues list</td></tr>
+            <tr><td>Scraping log</td><td>08</td><td>Log file</td></tr>
+            <tr><td>Files, pages or forms, if your site uses them</td><td>09</td><td>Extra tables and checks</td></tr>
+          </tbody>
+        </table></div>
+        <h3>Capstone ideas by research area</h3>
+        <p>Use your own site if you have one. If not, these suit CEEW's work. The "likely challenges" are what to look for in recon; confirm them yourself before relying on them.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Area</th><th>Capstone</th><th>Likely challenges to check in recon</th></tr></thead>
+          <tbody>
+            <tr><td>Climate risk</td><td>A daily heat record for the stations in your state, built with the Track B lesson B3 script</td><td>Placeholders, silent stations, the max-temperature date</td></tr>
+            <tr><td>Air quality</td><td>Station readings from a pollution monitoring portal for one city</td><td>Search forms, session values, hourly data split across pages</td></tr>
+            <tr><td>Power sector</td><td>Daily generation figures from published grid or power-supply reports</td><td>PDF bulletins, layouts that change over time</td></tr>
+            <tr><td>Water</td><td>Weekly reservoir storage from bulletin PDFs</td><td>PDFs, comparing against a stated normal</td></tr>
+          </tbody>
+        </table></div>
+        <div class="try"><input type="checkbox" id="done-m10" data-mod="m10"><label for="done-m10"><b>Done when</b><span>you have a validated CSV and a log for a site of your own choosing, and the link is in the tracker.</span></label></div>
+        <details class="answer"><summary>Review rubric (for the reviewer)</summary><div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Check</th><th>Pass looks like</th></tr></thead>
+            <tbody>
+              <tr><td>Permission</td><td>Official route, terms and robots.txt checked and noted; no personal data</td></tr>
+              <tr><td>Level</td><td>Site placed on the green–red scale, with the source test as evidence</td></tr>
+              <tr><td>Completeness</td><td>Rows plus failures equal the recon count, or the gap is explained</td></tr>
+              <tr><td>Cleaning</td><td>Placeholders named and blanked; nothing filled in or rounded</td></tr>
+              <tr><td>Validation</td><td>Five spot-checks recorded with a date; anomalies flagged, not deleted</td></tr>
+              <tr><td>Politeness</td><td>A pause between requests; no repeated hammering after errors</td></tr>
+              <tr><td>Repeatability</td><td>The reviewer could rerun it from the log</td></tr>
+            </tbody>
+          </table></div>
+          <p>Ask one question in the review: "Which number in this file would you least trust, and why?" A researcher who can answer that has understood the course.</p>
+        </div></details>
+      </section>
+
+      <!-- Track B -->
+      <section id="trackb">
+        <div class="sec-head">
+          <div class="eyebrow"><span>Track B · optional</span><span class="time">3 lessons, about 4 hours</span></div>
+          <h2>From Claude's answer to a working pipeline</h2>
+        </div>
+        <p>For researchers who want to read and adapt code, and for anyone who needs data collected every day. Everything runs on Google's servers through Colab or Apps Script; nothing is installed on your computer. You don't need to have coded before, but finish the core modules first.</p>
+        <p>All the files are in the <a href="https://github.com/mrafiuddin50/ceew_scraping_curriculum" target="_blank" rel="noopener">course repository on GitHub</a>; the links below open them directly. In Colab, make your own copy before you change anything (<b>File › Save a copy in Drive</b>).</p>
+        <p class="warn"><b>Status.</b> The notebooks and the script were tested on 12 October 2026 against saved IMD replies and the practice PDF, not yet from Google's servers against the live IMD site. Each one checks its connection first. If a check fails, tell the course owner.</p>
+
+        <h3>B1 · Reading the collector notebook</h3>
+        <p>Open the <a href="https://colab.research.google.com/github/mrafiuddin50/ceew_scraping_curriculum/blob/main/notebooks/IMD_station_collector.ipynb" target="_blank" rel="noopener">IMD station collector in Colab</a> and read Step 2, the working parts, with Claude beside you. Ask Claude to explain one numbered section at a time. You'll meet the four ideas every collector uses: asking the site for data (<code>requests</code>), reading the reply (JSON), turning it into a table (<code>pandas</code>), and deciding what counts as missing.</p>
+        <ol>
+          <li>Run the notebook for 3 stations from your state (Step 1, <code>STATION_IDS</code>).</li>
+          <li>Ask Claude to add one column to the observations: moonrise. Make the change in your copy and run it again.</li>
+          <li>Change <code>PAUSE_SECONDS</code> to 1 and watch how much faster it is. Then put it back to 2, and write one sentence on why.</li>
+        </ol>
+        <details class="answer"><summary>Check your answer</summary><div>
+          <ul>
+            <li>3 stations give 3 observation rows (or fewer plus <code>no_record</code> rows), 21 forecast rows and 42 temperature-table rows.</li>
+            <li>Moonrise: one line added to the <code>obs</code> dictionary in <code>parse_station</code>, reading <code>rec.get("moonrise")</code> through <code>as_text</code>. If Claude also changed other lines, ask why.</li>
+            <li>Why 2 seconds: the site is a public service. Your collection shouldn't slow it for others, and fast repeated requests are what get a whole organisation's connection blocked.</li>
+          </ul>
+        </div></details>
+
+        <h3>B2 · Tables from PDFs</h3>
+        <p>Open the <a href="https://colab.research.google.com/github/mrafiuddin50/ceew_scraping_curriculum/blob/main/notebooks/PDF_tables_to_Sheets.ipynb" target="_blank" rel="noopener">PDF tables notebook in Colab</a>. Download <a href="practice/practice_bulletin_safdarjung.pdf" target="_blank" rel="noopener">practice_bulletin_safdarjung.pdf</a>, upload it to your Google Drive, and point Step 1 at it. The notebook checks which pages contain text (scanned pages don't), finds the tables, shows you the first rows, and saves each table to its own tab in a new Google Sheet.</p>
+        <details class="answer"><summary>Check your answer</summary><div>
+          <ul>
+            <li>Step 3: 2 pages, both with text, neither scanned.</li>
+            <li>Step 4: 2 tables. Page 1 table: 13 rows × 9 columns. Page 2 table: 15 rows × 8 columns, with three columns called "Day".</li>
+            <li>Same values as in the Module 09 answer. If a number differs, the PDF reader misread a cell: find it, and note it in your log.</li>
+          </ul>
+        </div></details>
+
+        <h3>B3 · Daily collection with Google Sheets and Apps Script</h3>
+        <p><a href="https://github.com/mrafiuddin50/ceew_scraping_curriculum/blob/main/apps_script/IMD_daily_collector.gs" target="_blank" rel="noopener">IMD_daily_collector.gs</a> runs once a day on Google's servers and adds that day's observations for your state to a Google Sheet. After a few weeks you have a history that IMD's page doesn't keep.</p>
+        <ol>
+          <li>Create a new Google Sheet. Choose <b>Extensions › Apps Script</b>.</li>
+          <li>Delete what's there. Open <a href="https://github.com/mrafiuddin50/ceew_scraping_curriculum/blob/main/apps_script/IMD_daily_collector.gs" target="_blank" rel="noopener">IMD_daily_collector.gs</a> on GitHub, choose <b>Copy raw file</b> (the copy icon), paste it in, and save. Set <code>STATE</code> to the state you claimed, spelled as IMD spells it.</li>
+          <li>Choose <code>testOnce</code> in the function menu and press <b>Run</b>. Approve the permissions Google asks for. Check that rows appear on the <code>observations</code> tab.</li>
+          <li>Choose <code>installDailyTrigger</code> and press <b>Run</b> once. It now runs every day around 11:00 IST. To stop it, run <code>removeTriggers</code>.</li>
+        </ol>
+        <p>Apps Script stops any run after about 6 minutes. With the 2-second pause and IMD's reply time, that's roughly 70 to 120 stations, so it suits one state, not all of India. The script stops itself at 5 minutes, saves what it has, and notes how many stations it skipped. Running it twice on one day doesn't add duplicate rows.</p>
+        <details class="answer"><summary>Check your answer after a week</summary><div>
+          <ul>
+            <li>One block of rows per day, each stamped with <code>collected_at_ist</code>. A missing day means the trigger didn't run: check <b>Executions</b> in Apps Script.</li>
+            <li>The same stations appear on the <code>no_record</code> tab day after day. A station that's usually fine and suddenly appears there is worth a look on the live site.</li>
+            <li>Ask Claude to chart one station's daily maximum against its date. Use <code>max_temp_date</code>, not the collection date.</li>
+          </ul>
+        </div></details>
+        <div class="try"><input type="checkbox" id="done-trackb" data-mod="trackb"><label for="done-trackb"><b>Done when</b><span>you've completed B1, plus B2 or B3, whichever your work needs.</span></label></div>
+      </section>
+
+      <!-- Prompt library -->
+      <section id="prompts">
+        <div class="sec-head"><div class="eyebrow"><span>Reference</span></div><h2>Prompt library</h2></div>
+        <p>The prompts from the course, in the order you'll use them. Replace anything in [square brackets].</p>
+        <div class="prompt"><div class="prompt-head"><span>1 · Recon</span><button class="copy" type="button">Copy</button></div><pre>Open [URL] in your browser. Don't extract any data yet. Map the site for me: what data is shown and for what units; how it's organised (menus, filters, pages, search); roughly how many items in total and how you counted; whether the data is in the page source or loaded from a data feed; and whether there's a download, API or terms-of-use page. Plain English, please. I don't code.</pre></div>
+        <div class="prompt"><div class="prompt-head"><span>2 · Read visible tables</span><button class="copy" type="button">Copy</button></div><pre>Open each of these pages: [links]. Copy [which table] exactly as shown into one CSV, with a column identifying the source page. Keep blanks blank; don't round, convert or fill in. List any page that failed.</pre></div>
+        <div class="prompt"><div class="prompt-head"><span>3 · Find the data feed</span><button class="copy" type="button">Copy</button></div><pre>Open [URL] and watch the network requests, then click [element]. Tell me which request carries the data on screen: its address, GET or POST, what the page sends with it, a short sample of the reply with fields matched to the screen, and whether it works on its own outside the page.</pre></div>
+        <div class="prompt"><div class="prompt-head"><span>4 · Build the collector</span><button class="copy" type="button">Copy</button></div><pre>Collect [what] for [which items] from [site], in your browser. Loop over: [list or link pattern]. Wait [2] seconds between requests. Treat these as missing: [codes]. Check each reply matches the item requested and list failures separately. Keep these fields: [fields]. Give me the result as CSV text for Google Sheets. Explain your plan in plain English before you start.
+(Or: write this as a Google Colab notebook with the same steps as the course's IMD collector: settings, connection check, collect, check, save to a Google Sheet.)</pre></div>
+        <div class="prompt"><div class="prompt-head"><span>5 · Validate</span><button class="copy" type="button">Copy</button></div><pre>Here is my CSV from [site], collected on [date]; recon said [N] items. Compare counts and list what's missing; find placeholder values; flag out-of-range values for [field: range]; check duplicate IDs and duplicate names; pick 5 random rows and tell me where to check each on the live site. Don't change the data.</pre></div>
+        <div class="prompt"><div class="prompt-head"><span>6 · Scraping log</span><button class="copy" type="button">Copy</button></div><pre>Write a one-page scraping log: source addresses, date collected, what and how many, how the collector works, missing-value handling, traps hit, validation done, known gaps, how to rerun. Only include what we actually observed.</pre></div>
+        <div class="prompt"><div class="prompt-head"><span>7 · Tables from a PDF</span><button class="copy" type="button">Copy</button></div><pre>For each table in this PDF: give the page, title, and number of rows and columns; give the table as CSV exactly as printed, blanks kept blank; point out repeated or split headers, merged cells, duplicate column names, totals rows and footnote marks. Then tell me which numbers you are least sure you read correctly.</pre></div>
+        <div class="prompt"><div class="prompt-head"><span>8 · robots.txt and terms</span><button class="copy" type="button">Copy</button></div><pre>Open [site]/robots.txt. In plain English: does it exist, what does it ask automated tools to avoid, does it set a delay, and are the pages I need affected? Then find the site's terms of use or data policy and quote the exact sentence about copying or reusing data.</pre></div>
+      </section>
+
+      <!-- Gotchas -->
+      <section id="gotchas">
+        <div class="sec-head"><div class="eyebrow"><span>Reference</span></div><h2>Gotcha field guide</h2></div>
+        <p>Traps from the IMD and CCAC work, each with the general rule it teaches.</p>
+        <div class="gotchas">
+          <div class="gotcha"><span class="sym">"The AI says the page is empty"</span><b>The data loads after the page.</b><span>Run the source test; go to the Network tab.</span></div>
+          <div class="gotcha"><span class="sym">Address never changes</span><b>The site keeps state on the server.</b><span>IMD remembers your last station per session. Send what the page sends.</span></div>
+          <div class="gotcha"><span class="sym">"Data will be uploaded shortly"</span><b>Error messages can mislead.</b><span>On IMD this appears for no session, a wrong ID and a silent station alike.</span></div>
+          <div class="gotcha"><span class="sym">99.9 · 999 · NA · 0000-00-00</span><b>Placeholders look like data.</b><span>List the site's codes and blank them before any averaging.</span></div>
+          <div class="gotcha"><span class="sym">Rainfall 0.00, everything else blank</span><b>A zero may be a default.</b><span>Flag zeros that arrive with no other readings.</span></div>
+          <div class="gotcha"><span class="sym">Two "Bilaspur"s</span><b>Names aren't identifiers.</b><span>Key every row on the site's ID.</span></div>
+          <div class="gotcha"><span class="sym">max_date ≠ page date</span><b>Each value has its own time.</b><span>Store the date that travels with the value.</span></div>
+          <div class="gotcha"><span class="sym">3,496 items when you filtered</span><b>Filters can drop silently.</b><span>On CCAC, check the item count on every page you collect.</span></div>
+          <div class="gotcha"><span class="sym">"Too many requests"</span><b>You went too fast.</b><span>Slow down, wait, and don't retry the same page repeatedly.</span></div>
+          <div class="gotcha"><span class="sym">Status 200 with {"status":404} inside</span><b>A normal reply can carry an error.</b><span>IMD does this for stations with no data. Check the content, not just the code.</span></div>
+          <div class="gotcha"><span class="sym">Departure of 99.0</span><b>Placeholders vary by field.</b><span>Judge each value against what's physically possible for its kind.</span></div>
+          <div class="gotcha"><span class="sym">No climate page link</span><b>Not every station has every product.</b><span>Some IMD stations (Jafarpur, for one) have no climate page. Record it; don't guess the address.</span></div>
+          <div class="gotcha"><span class="sym">Header rows vanish</span><b>Tools guess where headers end.</b><span>While building the course notebook, skipping a fixed two rows silently dropped January and February. Pick data rows by what they contain.</span></div>
+        </div>
+      </section>
+
+      <!-- Troubleshooting -->
+      <section id="trouble">
+        <div class="sec-head"><div class="eyebrow"><span>Reference</span></div><h2>Troubleshooting</h2></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>What you see</th><th>Likely cause</th><th>What to do</th></tr></thead>
+          <tbody>
+            <tr><td>Claude or a formula says the page is empty</td><td>The data loads after the page (dynamic site)</td><td>Run the source test (Module 02); find the feed in the Network tab (Module 05)</td></tr>
+            <tr><td>"Data will be uploaded shortly" from IMD</td><td>No data for that station, a wrong ID, or no station chosen in this session</td><td>Check the ID against the station list; record it as no record, don't retry endlessly</td></tr>
+            <tr><td>999, 99.9, 99.0, NA, (), 0000-00-00</td><td>Placeholders for missing values</td><td>Blank them before any averaging; list them in your log</td></tr>
+            <tr><td>HTTP 429, "Too many requests"</td><td>You went too fast</td><td>Stop. Wait an hour. Slow down to 2 seconds or more</td></tr>
+            <tr><td>HTTP 403, "Forbidden"</td><td>The site refuses the request: missing headers, an unusual source, or deliberate blocking</td><td>Try Claude's browser route. If that fails too, stop and ask for the data instead. Don't try to get round a block</td></tr>
+            <tr><td>Certificate or SSL error</td><td>A problem with the site's security certificate, or with the network in between</td><td>Don't switch security checks off. Try the other route and tell the course owner</td></tr>
+            <tr><td>Colab can't reach the site, but your browser can</td><td>The site may not accept requests from cloud servers</td><td>Use Claude's browser route (Module 06, Route A)</td></tr>
+            <tr><td>Address doesn't change when you search; ends in <code>.aspx</code></td><td>A form with hidden session values</td><td>Let Claude fill in the form in its browser (Module 09)</td></tr>
+            <tr><td><code>#REF!</code> from <code>IMPORTHTML</code> in Google Sheets</td><td>Google couldn't fetch or read the page</td><td>Copy and paste, or ask Claude to read the table (Module 04)</td></tr>
+            <tr><td>Apps Script notes "Stopped at the time limit"</td><td>Too many stations for one 6-minute run</td><td>Set <code>STATION_IDS</code> to fewer stations, or split the state across two scripts</td></tr>
+            <tr><td>Claude's browser script "timed out"</td><td>About 45 seconds per script</td><td>Ask Claude to run it in the background and check back</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <!-- Checklist -->
+      <section id="checklist">
+        <div class="sec-head"><div class="eyebrow"><span>Reference</span></div><h2>One-page checklist</h2></div>
+        <ul class="checklist">
+          <li>Official download, portal or data request checked first</li>
+          <li>Terms of use and robots.txt read; no personal data involved</li>
+          <li>Source test run; site placed on the green–red scale</li>
+          <li>Recon done: units, IDs, total count, link patterns, missing-value codes</li>
+          <li>Data location found: visible table or data feed (address, GET/POST, fields)</li>
+          <li>Collector request covers loop, pace, missing codes, ID checks, output</li>
+          <li>Claude explained the code in plain English before it ran</li>
+          <li>Counts reconciled; placeholders blanked; ranges and duplicates checked</li>
+          <li>Five rows spot-checked against the live site, with the date noted</li>
+          <li>Scraping log saved beside the data</li>
+          <li>Every source link opened and verified before it goes into a CEEW output</li>
+        </ul>
+      </section>
+
+      <!-- Sources -->
+      <section id="sources">
+        <div class="sec-head"><div class="eyebrow"><span>Reference</span></div><h2>Sources</h2></div>
+        <p>Site behaviour described in this course was observed directly on 12 October 2026. Government sites change without notice, so recheck before relying on any detail. Open and verify each link before citing it.</p>
+        <ul class="sources">
+          <li>IMD, Local Weather Report &amp; Forecast: <a href="https://city.imd.gov.in/citywx/responsive/" target="_blank" rel="noopener">https://city.imd.gov.in/citywx/responsive/</a></li>
+          <li>IMD, Extreme &amp; Climatological Data, New Delhi-Safdarjung: <a href="https://city.imd.gov.in/citywx/extreme/climate.php?id=42182" target="_blank" rel="noopener">https://city.imd.gov.in/citywx/extreme/climate.php?id=42182</a></li>
+          <li>IMD, Regional Meteorological Centre New Delhi, data supply procedure: <a href="https://mausamaudit.imd.gov.in/newdelhi/docs/data-procedure.pdf" target="_blank" rel="noopener">https://mausamaudit.imd.gov.in/newdelhi/docs/data-procedure.pdf</a></li>
+          <li>CCAC resource library (pattern and rate-limit lessons): <a href="https://www.ccacoalition.org/resources" target="_blank" rel="noopener">https://www.ccacoalition.org/resources</a></li>
+        </ul>
+        <p>This course combines two drafts: an AI-first course built around IMD, and a code-first curriculum with Colab notebooks and capstone ideas. The notebooks and the Apps Script in the course repository were rewritten for this version to fix problems found in review.</p>
+      </section>
+
+      <footer>
+        <span>Prepared for CEEW researchers. Claude drafted the material; the course owner reviews and owns it.</span>
+        <span>Course files (notebooks, Apps Script, practice PDF): <a href="https://github.com/mrafiuddin50/ceew_scraping_curriculum" target="_blank" rel="noopener">github.com/mrafiuddin50/ceew_scraping_curriculum</a>.</span>
+        <span>Ticks on this page are saved in your browser only. Record progress in the cohort tracker sheet.</span>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script>
+(function(){
+  var STATES = {"Andaman & Nicobar":5,"Andhra Pradesh":27,"Arunachal Pradesh":11,"Assam":30,"Bihar":39,"Chhatisgarh":34,"Delhi":18,"Diu":1,"Goa":11,"Gujarat":63,"Haryana":107,"Himachal Pradesh":69,"Jammu & Kashmir":74,"Jharkhand":38,"Karnataka":42,"Kerala":21,"Ladakh UT":8,"Lakshadweep":5,"Madhya Pradesh":136,"Maharashtra":106,"Manipur":2,"Meghalaya":4,"Mizoram":5,"Nagaland":20,"Orissa":90,"Pondicherry":3,"Punjab":82,"Rajasthan":154,"Sikkim":15,"Tamil Nadu":149,"Telangana":67,"Tripura":3,"Uttar Pradesh":154,"Uttrakhand":92,"West Bengal":44};
+  var MODS = ['m0','m1','m2','m3','m4','m5','m6','m7','m8','m9','m10'];
+  var KEY = 'ceew-scraping-course-v3';
+  var practice = function(n){ return n >= 10 && n <= 45; };
+  var me = { state: '', modules: {} };
+  try { var v = JSON.parse(localStorage.getItem(KEY) || 'null'); if (v && typeof v === 'object') me = { state: v.state || '', modules: v.modules || {} }; } catch (e) {}
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(me)); } catch (e) {} }
+  var $ = function(id){ return document.getElementById(id); };
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('input[data-mod]'));
+  var sel = $('stateSel');
+  Object.keys(STATES).forEach(function(st){
+    var o = document.createElement('option'); o.value = st; o.textContent = st + ' (' + STATES[st] + ')' + (practice(STATES[st]) ? ' ✓' : '');
+    sel.appendChild(o);
+  });
+  function render(){
+    var done = 0;
+    boxes.forEach(function(b){
+      var on = !!me.modules[b.dataset.mod];
+      b.checked = on;
+      var link = document.querySelector('nav.index a[href="#' + b.dataset.mod + '"]');
+      if (link) link.classList.toggle('done', on);
+      if (on && MODS.indexOf(b.dataset.mod) >= 0) done++;
+    });
+    $('progText').textContent = done + ' of ' + MODS.length + ' modules done';
+    $('progBar').style.width = (done / MODS.length * 100) + '%';
+    sel.value = me.state || '';
+    $('trackerStatus').textContent = me.state ? ('Your state: ' + me.state + ', ' + STATES[me.state] + ' stations. Remember to add it to the cohort tracker sheet.') : '';
+    var g = $('stateGrid'); g.textContent = '';
+    Object.keys(STATES).forEach(function(st){
+      var sp = document.createElement('span');
+      var name = document.createElement('span'); name.style.cssText = 'border:0;padding:0;background:none';
+      name.textContent = st + (practice(STATES[st]) ? ' ✓' : '');
+      var n = document.createElement('b'); n.textContent = STATES[st];
+      sp.appendChild(name); sp.appendChild(n);
+      if (me.state === st) sp.className = 'mine';
+      g.appendChild(sp);
+    });
+  }
+  boxes.forEach(function(b){ b.addEventListener('change', function(){ me.modules[b.dataset.mod] = b.checked; save(); render(); }); });
+  sel.addEventListener('change', function(){ me.state = sel.value; save(); render(); });
+  render();
+
+  document.querySelectorAll('button.copy').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var pre = btn.closest('.prompt, .code-wrap').querySelector('pre');
+      var text = pre.textContent;
+      function ok(){ btn.textContent = 'Copied'; setTimeout(function(){ btn.textContent = 'Copy'; }, 1500); }
+      function fallback(){
+        var r = document.createRange(); r.selectNodeContents(pre);
+        var w = window.getSelection(); w.removeAllRanges(); w.addRange(r);
+        btn.textContent = 'Selected · press Ctrl+C';
+        setTimeout(function(){ btn.textContent = 'Copy'; }, 2500);
+      }
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, fallback);
+        else fallback();
+      } catch (e) { fallback(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -17,8 +17,8 @@ Nothing is installed or run on anyone's own computer. The earlier draft's Stream
 | Part | Content | Time |
 |---|---|---|
 | Before you start | Setup check (Claude browser, developer tools, Sheets and Colab connection), claim a state in the cohort tracker sheet | 15 min |
-| Core, Modules 00–10 | Everyone. Claude does the coding; the researcher decides, checks and documents | 5–6 h |
-| Track B, lessons B1–B3 | Optional. Reading and adapting Colab notebooks; PDFs; daily collection with Apps Script | about 4 h |
+| Core, Modules 00–11 | Everyone. Claude does the coding; the researcher decides, checks and documents | 6–7 h |
+| Track B, lessons B1–B4 | Optional. Reading and adapting Colab notebooks; PDFs; daily collection with Apps Script; data behind charts | about 5 h |
 | Reference | Prompt library, gotcha field guide, troubleshooting, checklist, sources | – |
 
 Difficulty uses IMD's warning colours: **green** (data on the page), **yellow** (data loads from a hidden feed), **orange** (traps: sessions, pages, forms, placeholders), **red** (logins, CAPTCHAs, personal data, forbidding terms: stop and request the data).
@@ -36,8 +36,9 @@ Difficulty uses IMD's warning colours: **green** (data on the page), **yellow** 
 | 06 | Collect | Route A: Claude collects in its browser. Route B: the IMD station collector notebook in Colab | Both |
 | 07 | Clean and validate | Five checks; practice files with known problems and answers | AI-first |
 | 08 | Repeat, pace, document | Apps Script or Claude scheduled task; keep raw replies; scraping log | Both |
-| 09 | Files, pages and forms | PDFs (Claude, or notebook B2), pages of results (CCAC lessons), search forms (Claude drives the form) | Both |
-| 10 | Capstone | Own site or a CEEW-area idea; reviewed against a rubric; link in tracker | Both |
+| 09 | Data behind charts | Five checks in order: download, data feed, the drawn chart, page source, picture. Worked example: IITM's Air Quality Early Warning System for Delhi (analysis page, 40 Chart.js charts). Route A: Claude reads the chart object; Route B: Charts notebook | New (v3) |
+| 10 | Files, pages and forms | PDFs (Claude, or notebook B2), pages of results (CCAC lessons), search forms (Claude drives the form) | Both |
+| 11 | Capstone | Own site or a CEEW-area idea; reviewed against a rubric; link in tracker | Both |
 
 Every module has a "Done when" check and an answer under it. A cohort tracker Google Sheet, shared by the course owner, records each researcher's state, progress and capstone link. Ticks on the website are saved in the researcher's own browser.
 
@@ -48,12 +49,13 @@ Every module has a "Done when" check and an answer under it. A cohort tracker Go
 | B1 | `notebooks/IMD_station_collector.ipynb` | Reading a real collector with Claude's help: requests, JSON, pandas, placeholders. Exercises: 3 stations, add a column, pause length |
 | B2 | `notebooks/PDF_tables_to_Sheets.ipynb` + `practice/practice_bulletin_safdarjung.pdf` | Text vs scanned PDFs; extracting tables with pdfplumber; checking what breaks |
 | B3 | `apps_script/IMD_daily_collector.gs` | Daily collection into a Google Sheet on a timer, with duplicate protection, batched saving and a self-imposed 5-minute stop |
+| B4 | `notebooks/Charts_to_Sheets.ipynb` | Reading drawn charts with a hidden browser (Playwright) in Colab; why the page source misleads |
 
 From the earlier draft, these were dropped: Playwright (Claude's browser handles form-driven sites for this audience), GitHub Actions, Parquet, PostgreSQL and BigQuery (beyond scope; Sheets and Drive cover the need), browser extensions, and Excel Power Query (both run on the researcher's computer).
 
 ## Status of the code
 
-All three code files were tested on 12 October 2026 against saved IMD replies (Delhi stations, the Safdarjung climate page) and the practice PDF. **None has yet been run from Google's servers against the live IMD site.** Each checks its connection first. Before the first cohort, the course owner should run:
+All four code files were tested on 12 October 2026 against saved IMD replies (Delhi stations, the Safdarjung climate page) and the practice PDF. **None has yet been run from Google's servers against the live IMD site.** Each checks its connection first. Before the first cohort, the course owner should run:
 
 1. The collector notebook, Steps 1–6, for one small state.
 2. `testOnce` in the Apps Script.
@@ -61,7 +63,7 @@ All three code files were tested on 12 October 2026 against saved IMD replies (D
 
 If Google's servers can't reach IMD, Route A (Claude's browser) still works for the whole core course.
 
-## Facts the course relies on (observed 12 October 2026)
+## Facts the course relies on (IMD observed 12 October 2026)
 
 - Station list: `GET https://city.imd.gov.in/citywx/responsive/api/`; 35 state and UT groups, 1,729 stations.
 - Station data: `POST .../api/fetchCity_static.php` with form field `ID`. A station with no data returns HTTP 200 with `{"status":404,"error":"Data will be uploaded shortly"}`.
@@ -71,3 +73,10 @@ If Google's servers can't reach IMD, Route A (Claude's browser) still works for 
 - Safdarjung's October 2013 "lowest minimum" of 36.3 °C is very likely an error on IMD's page.
 
 Recheck before each cohort: government sites change without notice.
+
+### IITM Air Quality Early Warning System (observed 14 October 2026)
+
+- `https://ews.tropmet.res.in/analysis.php` draws 40 Chart.js (4.5.1) charts holding about 227,000 data points.
+- "Hourly Forecast Verification (PM2.5) 43 - Station mean": 432 time labels, newest first (21 Oct 17:00 to 1 Oct 17:00); 382 one-hour and 49 two-hour steps; Observation 187 values; WRF-Chem(10 Km) 357; 13 models in the legend with no data; axis in μg/m3; no time zone stated on the page.
+- The site's download page and the `pm25_json.php` chart feed returned 404; no robots.txt. Forecast maps and meteograms are images.
+- Claude's browser treated the site as high-risk and asked for approval for each action.

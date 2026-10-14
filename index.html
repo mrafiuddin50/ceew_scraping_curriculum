@@ -831,16 +831,16 @@ footer{
     <h1>Scraping Field Course</h1>
     <p class="lede">Learn to collect data from websites with Claude doing the coding. The worked example throughout is IMD's Local Weather Report and Forecast site, but every module ends with how the same move works on other sites. An optional second track takes you from Claude's answer to a notebook and a daily pipeline.</p>
     <div class="meta-row">
-      <span><b>11 core modules</b> · about 5–6 hours</span>
-      <span><b>Track B</b> (optional) · about 4 hours</span>
+      <span><b>12 core modules</b> · about 6–7 hours</span>
+      <span><b>Track B</b> (optional) · about 5 hours</span>
       <span><b>Tools:</b> Claude with a browser, Google Colab and Google Sheets. Nothing to install on your computer.</span>
-      <span><b>Site behaviour checked:</b> 12 October 2026</span>
+      <span><b>Sites checked:</b> IMD 12 Oct, IITM 14 Oct 2026</span>
     </div>
   </header>
 
   <div class="layout">
     <nav class="index" aria-label="Modules">
-      <div class="progress"><span id="progText">0 of 11 modules done</span><div class="bar"><i id="progBar"></i></div></div>
+      <div class="progress"><span id="progText">0 of 12 modules done</span><div class="bar"><i id="progBar"></i></div></div>
       <ol>
         <li class="group">Before you start</li>
         <li><a href="#setup"><span class="n">–</span>Setup check</a></li>
@@ -855,8 +855,9 @@ footer{
         <li><a href="#m6"><span class="n">06</span>Collect: Claude or Colab<span class="tick">✓</span></a></li>
         <li><a href="#m7"><span class="n">07</span>Clean and validate<span class="tick">✓</span></a></li>
         <li><a href="#m8"><span class="n">08</span>Repeat and document<span class="tick">✓</span></a></li>
-        <li><a href="#m9"><span class="n">09</span>Files, pages and forms<span class="tick">✓</span></a></li>
-        <li><a href="#m10"><span class="n">10</span>Capstone: a new site<span class="tick">✓</span></a></li>
+        <li><a href="#m9"><span class="n">09</span>Data behind charts<span class="tick">✓</span></a></li>
+        <li><a href="#m10"><span class="n">10</span>Files, pages and forms<span class="tick">✓</span></a></li>
+        <li><a href="#m11"><span class="n">11</span>Capstone: a new site<span class="tick">✓</span></a></li>
         <li class="group">Optional</li>
         <li><a href="#trackb"><span class="n">B</span>Track B: to a pipeline<span class="tick">✓</span></a></li>
         <li class="group">Reference</li>
@@ -1351,10 +1352,89 @@ Only include things we actually observed in this conversation.</pre></div>
       <!-- 09 -->
       <section id="m9">
         <div class="sec-head">
-          <div class="eyebrow"><span>Module 09</span><span class="level lv-orange">Orange</span><span class="time">45 min</span></div>
+          <div class="eyebrow"><span>Module 09</span><span class="level lv-orange">Orange</span><span class="time">50 min</span></div>
+          <h2>Data behind charts</h2>
+        </div>
+        <p>Some sites show their data only as charts, with no table and no download button. Before you think about reading values off the picture, check whether the numbers are still in the page. When a chart is drawn in your browser by a charting library, they nearly always are: the page has to hand the numbers to the chart.</p>
+        <p><b>Drawn or picture?</b> Move your mouse along the line. If a box pops up with exact values, the chart is drawn in the browser and its data can be read. If nothing happens, it's probably a picture (PNG, JPG or GIF). Claude can tell you for certain: ask whether the chart is an image or is drawn on a canvas.</p>
+        <h3>Five checks, in this order</h3>
+        <ol>
+          <li><b>A download.</b> A "Download CSV" option in the chart's menu, a data page, or an official data request. It's the cleanest source when it exists.</li>
+          <li><b>The data feed.</b> If the chart loads its numbers from an address, the Network tab shows it (Module 05). Collect from the feed.</li>
+          <li><b>The drawn chart.</b> Ask the chart itself for its data: its legend names, its x labels and every value. Claude can do this in its browser (Route A), or the Charts notebook can do it in Colab (Route B). This gives you exactly what is plotted.</li>
+          <li><b>The page source.</b> The numbers are often there too, but cutting them out by search can attach them to the wrong series (see below). Use it only to cross-check.</li>
+          <li><b>A picture.</b> The numbers aren't on the page. Find who made the image (its address usually tells you) and ask them for the data. Reading values off a picture is a last resort: record them as digitised, give the likely error, and never present them as measurements.</li>
+        </ol>
+        <div class="imd">
+          <span class="tag">Worked example: IITM's Air Quality Early Warning System for Delhi</span>
+          <p>The <a href="https://ews.tropmet.res.in/analysis.php" target="_blank" rel="noopener">analysis page</a> of <a href="https://ews.tropmet.res.in/" target="_blank" rel="noopener">ews.tropmet.res.in</a> compares observed air quality in Delhi with model forecasts. What we found on 14 October 2026:</p>
+          <ul>
+            <li><b>Check 1:</b> the site's "Download" menu link returned "404 Not Found".</li>
+            <li><b>Check 2:</b> one chart on another page (<code>index-2.php</code>) loads its data from <code>pm25_json.php</code>, which also returned 404. That chart has no data to collect.</li>
+            <li><b>Check 3:</b> the analysis page draws 40 charts with Chart.js, holding about 227,000 data points between them. The chart "Hourly Forecast Verification (PM2.5) 43 - Station mean" holds 432 time labels and 26 legend entries. "Observation" has 187 hourly values (5 Oct 07:00 to 13 Oct 14:00) and "WRF-Chem(10 Km)" has 357. The axis says μg/m3.</li>
+            <li><b>Check 5:</b> the forecast maps and the meteograms (from IMD, NCMRWF and IITM's own forecast server) are pictures. Their numbers live with whoever made them.</li>
+          </ul>
+          <p>Traps in that one chart:</p>
+          <ul>
+            <li>The legend lists "WRF-Chem (400 m)", Silam, ECMWF and others that hold no data at all. A legend entry is not evidence of data.</li>
+            <li>The time labels run newest first, from 21 Oct (forecast) back to 1 Oct.</li>
+            <li>Spacing changes: 382 one-hour steps and 49 two-hour steps. Labels are two-hourly from 17 Oct 17:00 onwards, and 10 Oct 23:00 is missing.</li>
+            <li>Several series share a name, such as "stdDev25max" (the shaded bands).</li>
+            <li>The page doesn't say what time zone the times are in. Find out before comparing with other data.</li>
+          </ul>
+          <p>Other things to know: Claude's browser treated this site as high-risk and asked for approval before every action; the site has no robots.txt; and IITM labels parts of the page "Experimental". Treat the values as monitoring and model outputs to verify, and request data from IITM for anything you publish.</p>
+        </div>
+        <h3>Route A: Claude reads the drawn chart</h3>
+        <div class="prompt"><div class="prompt-head"><span>Prompt · data behind a chart</span><button class="copy" type="button">Copy</button></div><pre>Open [URL] in your browser and find the chart titled "[chart title]".
+Don't read numbers off the picture. Ask the chart itself for its data: for Chart.js charts use Chart.getChart on the chart's canvas; for Highcharts use Highcharts.charts.
+1. Tell me which charting library it uses, how many x labels it has, the first and last label, and whether they run oldest or newest first.
+2. List every series in the legend with how many values it holds. Say which are empty and which are hidden.
+3. Give me CSV text with one row per x label (oldest first) and one column per series that has data. Keep blanks blank.
+4. Tell me the units shown on the axis and whether the page says what time zone the times are in.</pre></div>
+        <h3>Route B: the Charts notebook in Colab</h3>
+        <p>Open the <a href="https://colab.research.google.com/github/mrafiuddin50/ceew_scraping_curriculum/blob/main/notebooks/Charts_to_Sheets.ipynb" target="_blank" rel="noopener">Charts notebook in Colab</a>. It opens the page in a hidden browser on Google's servers, waits for the charts to draw, reads every chart, and saves a summary of each series plus the data to a Google Sheet. Nothing is installed on your computer. Step 1 lets you keep only the charts whose heading contains a phrase; the default is the hourly PM2.5 chart above.</p>
+        <details>
+          <summary>Why not just cut the numbers out of the page source?</summary>
+          <div>
+            <p>On the IITM page we tried, and it went wrong in three ways:</p>
+            <ul>
+              <li>"WRF-Chem (400 m)" has no data of its own in the page source, so a search attached the next series' numbers to it.</li>
+              <li>The source holds a list called <code>model_pm25</code> full of numbers that the hourly PM2.5 chart doesn't display.</li>
+              <li>Some chart code is commented out: it sits in the source but never runs.</li>
+            </ul>
+            <p>Asking the drawn chart for its data avoids all three: you get what is plotted, under the name in its legend.</p>
+          </div>
+        </details>
+        <div class="transfer"><b>On other sites</b><span>Dashboards for air quality, power and water often draw their charts this way. Ask Claude during recon (Module 03) which charting library a site uses. For a library other than Chart.js or Highcharts, ask Claude how to read that library's chart data; the question is the same.</span></div>
+        <div class="try"><input type="checkbox" id="done-m9" data-mod="m9"><label for="done-m9"><b>Done when</b><span>you have Observation and WRF-Chem(10 Km) from the hourly PM2.5 chart in a Google Sheet, oldest first, with the units and a note on the time zone, and you've listed which legend entries were empty.</span></label></div>
+        <details class="answer"><summary>Check your answer</summary><div>
+          <p>The page updates daily, so your numbers will differ. Check the shape, then check three values against the live chart by hovering over it. Reference run, 14 October 2026:</p>
+          <ul>
+            <li>Chart.js (version 4.5.1). 432 x labels, newest first, from 2026-10-21 17:00 to 2026-10-01 17:00.</li>
+            <li>Observation: 187 values. WRF-Chem(10 Km): 357. Both together: 162 hours. wrf-Chem (2km): 269.</li>
+            <li>Empty legend entries included WRF-Chem (400 m), Silam, Ensemble, ECMWF, WACCM, GEOS_FP, GEOS_ML, NCEP, NCMRWF (10 Km), NCMRWF (330 m), cdac_wrf_chem (10km), IITM-CMAQ-PX and IITM-CMAQ-NOah.</li>
+            <li>Observation ranged from 17.09 to 164.5 μg/m3.</li>
+          </ul>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Time label</th><th>Observation</th><th>WRF-Chem(10 Km)</th><th>wrf-Chem (2km)</th></tr></thead>
+            <tbody>
+              <tr><td>2026-10-05 07:00</td><td>50.54</td><td>104.9</td><td>42.22</td></tr>
+              <tr><td>2026-10-08 00:00</td><td>96.18</td><td>151.55</td><td>97.02</td></tr>
+              <tr><td>2026-10-10 12:00</td><td>63.55</td><td>108.9</td><td>78.44</td></tr>
+              <tr><td>2026-10-13 14:00</td><td>60.63</td><td>121.22</td><td>121.4</td></tr>
+            </tbody>
+          </table></div>
+          <p>Time zone: the analysis page didn't state one on 14 October. Write "not stated" in your log rather than guessing. Other pages on the site say "Time in IST", which is a lead to check, not proof.</p>
+        </div></details>
+      </section>
+
+      <!-- 10 -->
+      <section id="m10">
+        <div class="sec-head">
+          <div class="eyebrow"><span>Module 10</span><span class="level lv-orange">Orange</span><span class="time">45 min</span></div>
           <h2>Files, pages of results and search forms</h2>
         </div>
-        <p>IMD's data comes from a feed. Many sites you'll meet don't work that way. Three other patterns are common on Indian government and sector sites, and each needs a different move.</p>
+        <p>IMD's data comes from a feed, and Module 09 covered charts. Three other patterns are common on Indian government and sector sites, and each needs a different move.</p>
         <div class="table-wrap"><table>
           <thead><tr><th>Pattern</th><th>How to recognise it</th><th>What to do</th></tr></thead>
           <tbody>
@@ -1377,7 +1457,7 @@ Then tell me which numbers you are least sure you read correctly.</pre></div>
           <p>The CCAC resource library lists 3,496 items, 15 to a page. Its filters only held if the parts of the address came in a strict order, and five or more filters silently returned the full unfiltered list. Each page had to be checked against the "items found" count before its rows were trusted. Rapid requests were blocked, and some pages stayed locked for over half an hour.</p>
         </div>
         <div class="transfer"><b>On other sites</b><span>Ask Claude during recon (Module 03) which of these patterns a site uses. A site can mix them: a search form whose results are pages of PDF links is common.</span></div>
-        <div class="try"><input type="checkbox" id="done-m9" data-mod="m9"><label for="done-m9"><b>Done when</b><span>Claude has extracted both tables from the practice PDF and you've checked them against the answer, and you can name which pattern your capstone site uses.</span></label></div>
+        <div class="try"><input type="checkbox" id="done-m10" data-mod="m10"><label for="done-m10"><b>Done when</b><span>Claude has extracted both tables from the practice PDF and you've checked them against the answer, and you can name which pattern your capstone site uses.</span></label></div>
         <details class="answer"><summary>Check your answer</summary><div>
           <ul>
             <li><b>Table 1</b> (page 1, normals 1991–2020): 13 rows (Jan–Dec plus Annual), 9 columns. Annual rainfall 758.9 mm; October mean minimum 19.5 °C and maximum 33.0 °C.</li>
@@ -1387,10 +1467,10 @@ Then tell me which numbers you are least sure you read correctly.</pre></div>
         </div></details>
       </section>
 
-      <!-- 10 -->
-      <section id="m10">
+      <!-- 11 -->
+      <section id="m11">
         <div class="sec-head">
-          <div class="eyebrow"><span>Module 10</span><span class="time">60 min</span></div>
+          <div class="eyebrow"><span>Module 11</span><span class="time">60 min</span></div>
           <h2>Capstone: take it to a new site</h2>
         </div>
         <p>Pick a site you need for your own work. Run the whole sequence, put your data and scraping log in one Drive folder, and paste its link into the <a href="https://docs.google.com/spreadsheets/d/1xdPgCzIkxTAHl6BblUlIGO-IGgz-H-8rVYEnezqIxyQ/edit" target="_blank" rel="noopener">cohort tracker sheet</a>. Your team lead or the course owner reviews it in 15 minutes against the rubric below.</p>
@@ -1404,7 +1484,8 @@ Then tell me which numbers you are least sure you read correctly.</pre></div>
             <tr><td>Five-part collection, with Claude or Colab</td><td>06</td><td>Google Sheet</td></tr>
             <tr><td>Five checks, five spot-checks</td><td>07</td><td>Issues list</td></tr>
             <tr><td>Scraping log</td><td>08</td><td>Log file</td></tr>
-            <tr><td>Files, pages or forms, if your site uses them</td><td>09</td><td>Extra tables and checks</td></tr>
+            <tr><td>Data behind charts, if your site uses them</td><td>09</td><td>Chart data and a series summary</td></tr>
+            <tr><td>Files, pages or forms, if your site uses them</td><td>10</td><td>Extra tables and checks</td></tr>
           </tbody>
         </table></div>
         <h3>Capstone ideas by research area</h3>
@@ -1414,11 +1495,12 @@ Then tell me which numbers you are least sure you read correctly.</pre></div>
           <tbody>
             <tr><td>Climate risk</td><td>A daily heat record for the stations in your state, built with the Track B lesson B3 script</td><td>Placeholders, silent stations, the max-temperature date</td></tr>
             <tr><td>Air quality</td><td>Station readings from a pollution monitoring portal for one city</td><td>Search forms, session values, hourly data split across pages</td></tr>
+            <tr><td>Air quality forecasts</td><td>Observed against forecast PM2.5 for Delhi from a forecasting site's charts</td><td>Charts drawn in the browser, empty legend entries, uneven time steps</td></tr>
             <tr><td>Power sector</td><td>Daily generation figures from published grid or power-supply reports</td><td>PDF bulletins, layouts that change over time</td></tr>
             <tr><td>Water</td><td>Weekly reservoir storage from bulletin PDFs</td><td>PDFs, comparing against a stated normal</td></tr>
           </tbody>
         </table></div>
-        <div class="try"><input type="checkbox" id="done-m10" data-mod="m10"><label for="done-m10"><b>Done when</b><span>you have a validated CSV and a log for a site of your own choosing, and the link is in the tracker.</span></label></div>
+        <div class="try"><input type="checkbox" id="done-m11" data-mod="m11"><label for="done-m11"><b>Done when</b><span>you have a validated CSV and a log for a site of your own choosing, and the link is in the tracker.</span></label></div>
         <details class="answer"><summary>Review rubric (for the reviewer)</summary><div>
           <div class="table-wrap"><table>
             <thead><tr><th>Check</th><th>Pass looks like</th></tr></thead>
@@ -1439,7 +1521,7 @@ Then tell me which numbers you are least sure you read correctly.</pre></div>
       <!-- Track B -->
       <section id="trackb">
         <div class="sec-head">
-          <div class="eyebrow"><span>Track B · optional</span><span class="time">3 lessons, about 4 hours</span></div>
+          <div class="eyebrow"><span>Track B · optional</span><span class="time">4 lessons, about 5 hours</span></div>
           <h2>From Claude's answer to a working pipeline</h2>
         </div>
         <p>For researchers who want to read and adapt code, and for anyone who needs data collected every day. Everything runs on Google's servers through Colab or Apps Script; nothing is installed on your computer. You don't need to have coded before, but finish the core modules first.</p>
@@ -1467,7 +1549,7 @@ Then tell me which numbers you are least sure you read correctly.</pre></div>
           <ul>
             <li>Step 3: 2 pages, both with text, neither scanned.</li>
             <li>Step 4: 2 tables. Page 1 table: 13 rows × 9 columns. Page 2 table: 15 rows × 8 columns, with three columns called "Day".</li>
-            <li>Same values as in the Module 09 answer. If a number differs, the PDF reader misread a cell: find it, and note it in your log.</li>
+            <li>Same values as in the Module 10 answer. If a number differs, the PDF reader misread a cell: find it, and note it in your log.</li>
           </ul>
         </div></details>
 
@@ -1487,7 +1569,23 @@ Then tell me which numbers you are least sure you read correctly.</pre></div>
             <li>Ask Claude to chart one station's daily maximum against its date. Use <code>max_temp_date</code>, not the collection date.</li>
           </ul>
         </div></details>
-        <div class="try"><input type="checkbox" id="done-trackb" data-mod="trackb"><label for="done-trackb"><b>Done when</b><span>you've completed B1, plus B2 or B3, whichever your work needs.</span></label></div>
+
+        <h3>B4 · Data behind charts</h3>
+        <p>Open the <a href="https://colab.research.google.com/github/mrafiuddin50/ceew_scraping_curriculum/blob/main/notebooks/Charts_to_Sheets.ipynb" target="_blank" rel="noopener">Charts notebook in Colab</a>. Step 2 installs a hidden browser (Chromium, through a tool called Playwright) on Google's computer for this session; nothing goes on yours. Run it once with the default settings, then again with <code>CHART_TITLE_CONTAINS</code> set to "running mean(PM2.5)".</p>
+        <ol>
+          <li>Compare the <code>series_summary</code> tab with what the chart's legend shows on the live page.</li>
+          <li>Read the "Why not just read the page source?" note at the end of the notebook. Ask Claude to explain, in your own project's terms, when reading the drawn chart is better than reading the source, and when the source is better.</li>
+        </ol>
+        <details class="answer"><summary>Check your answer</summary><div>
+          <ul>
+            <li>Default run: the same counts as the Module 09 answer, on the day you run it. Series with no data appear in the summary with the note "In the legend but holds no data".</li>
+            <li>Second run: one chart, "Forecast Verification 24 - running mean(PM2.5)", with 5 legend entries. On 14 October it held 823 values in total.</li>
+            <li>Leaving the heading filter blank reads all 40 charts: about 227,000 rows on 14 October, most of them from one chart of biomass-burning markers. Filter first.</li>
+            <li>Step 5 prints the time-label spacing. A mix of one-hour and two-hour gaps is expected on this page.</li>
+            <li>The drawn chart is better when the source is messy or labels are unclear. The source (or better, a data feed) is better when you need data the chart doesn't display, or when the page has to be collected without running a browser.</li>
+          </ul>
+        </div></details>
+        <div class="try"><input type="checkbox" id="done-trackb" data-mod="trackb"><label for="done-trackb"><b>Done when</b><span>you've completed B1, plus whichever of B2, B3 and B4 your work needs.</span></label></div>
       </section>
 
       <!-- Prompt library -->
@@ -1502,6 +1600,7 @@ Then tell me which numbers you are least sure you read correctly.</pre></div>
         <div class="prompt"><div class="prompt-head"><span>5 · Validate</span><button class="copy" type="button">Copy</button></div><pre>Here is my CSV from [site], collected on [date]; recon said [N] items. Compare counts and list what's missing; find placeholder values; flag out-of-range values for [field: range]; check duplicate IDs and duplicate names; pick 5 random rows and tell me where to check each on the live site. Don't change the data.</pre></div>
         <div class="prompt"><div class="prompt-head"><span>6 · Scraping log</span><button class="copy" type="button">Copy</button></div><pre>Write a one-page scraping log: source addresses, date collected, what and how many, how the collector works, missing-value handling, traps hit, validation done, known gaps, how to rerun. Only include what we actually observed.</pre></div>
         <div class="prompt"><div class="prompt-head"><span>7 · Tables from a PDF</span><button class="copy" type="button">Copy</button></div><pre>For each table in this PDF: give the page, title, and number of rows and columns; give the table as CSV exactly as printed, blanks kept blank; point out repeated or split headers, merged cells, duplicate column names, totals rows and footnote marks. Then tell me which numbers you are least sure you read correctly.</pre></div>
+        <div class="prompt"><div class="prompt-head"><span>9 · Data behind a chart</span><button class="copy" type="button">Copy</button></div><pre>Open [URL] and find the chart titled "[title]". Don't read numbers off the picture; ask the chart itself for its data (Chart.js: Chart.getChart on its canvas; Highcharts: Highcharts.charts). Tell me the library, the number and order of x labels, every legend entry with how many values it holds (empty and hidden ones too), the units and the time zone if stated. Then give me CSV text, one row per x label, oldest first, one column per series with data.</pre></div>
         <div class="prompt"><div class="prompt-head"><span>8 · robots.txt and terms</span><button class="copy" type="button">Copy</button></div><pre>Open [site]/robots.txt. In plain English: does it exist, what does it ask automated tools to avoid, does it set a delay, and are the pages I need affected? Then find the site's terms of use or data policy and quote the exact sentence about copying or reusing data.</pre></div>
       </section>
 
@@ -1522,6 +1621,10 @@ Then tell me which numbers you are least sure you read correctly.</pre></div>
           <div class="gotcha"><span class="sym">Status 200 with {"status":404} inside</span><b>A normal reply can carry an error.</b><span>IMD does this for stations with no data. Check the content, not just the code.</span></div>
           <div class="gotcha"><span class="sym">Departure of 99.0</span><b>Placeholders vary by field.</b><span>Judge each value against what's physically possible for its kind.</span></div>
           <div class="gotcha"><span class="sym">No climate page link</span><b>Not every station has every product.</b><span>Some IMD stations (Jafarpur, for one) have no climate page. Record it; don't guess the address.</span></div>
+          <div class="gotcha"><span class="sym">"WRF-Chem (400 m)" in the legend, no data</span><b>A legend entry isn't data.</b><span>On IITM's hourly PM2.5 chart, 13 of the models listed held nothing. Count values per series.</span></div>
+          <div class="gotcha"><span class="sym">1-hour, then 2-hour steps</span><b>Spacing can change mid-chart.</b><span>Check the gaps between time labels before you treat a series as hourly.</span></div>
+          <div class="gotcha"><span class="sym">Numbers in the source that no chart shows</span><b>Page source holds leftovers.</b><span>Take what the chart draws, under its legend name; use the source only to cross-check.</span></div>
+          <div class="gotcha"><span class="sym">"Download" link: 404</span><b>Menus outlive the pages they point to.</b><span>A dead download or feed is a finding. Note it, then try the next check.</span></div>
           <div class="gotcha"><span class="sym">Header rows vanish</span><b>Tools guess where headers end.</b><span>While building the course notebook, skipping a fixed two rows silently dropped January and February. Pick data rows by what they contain.</span></div>
         </div>
       </section>
@@ -1539,7 +1642,10 @@ Then tell me which numbers you are least sure you read correctly.</pre></div>
             <tr><td>HTTP 403, "Forbidden"</td><td>The site refuses the request: missing headers, an unusual source, or deliberate blocking</td><td>Try Claude's browser route. If that fails too, stop and ask for the data instead. Don't try to get round a block</td></tr>
             <tr><td>Certificate or SSL error</td><td>A problem with the site's security certificate, or with the network in between</td><td>Don't switch security checks off. Try the other route and tell the course owner</td></tr>
             <tr><td>Colab can't reach the site, but your browser can</td><td>The site may not accept requests from cloud servers</td><td>Use Claude's browser route (Module 06, Route A)</td></tr>
-            <tr><td>Address doesn't change when you search; ends in <code>.aspx</code></td><td>A form with hidden session values</td><td>Let Claude fill in the form in its browser (Module 09)</td></tr>
+            <tr><td>Address doesn't change when you search; ends in <code>.aspx</code></td><td>A form with hidden session values</td><td>Let Claude fill in the form in its browser (Module 10)</td></tr>
+            <tr><td>No pop-up values when you hover over a chart</td><td>The chart is a picture, not drawn in the browser</td><td>Find who made the image and ask for the data (Module 09, check 5)</td></tr>
+            <tr><td>The Charts notebook finds no charts</td><td>Charts not drawn yet, pictures, or a library it doesn't read</td><td>Raise <code>WAIT_SECONDS</code>; check the chart is drawn; ask Claude which library the page uses</td></tr>
+            <tr><td>Claude's browser asks permission for every step</td><td>The site is treated as high-risk</td><td>Approve each step, or use the Colab route</td></tr>
             <tr><td><code>#REF!</code> from <code>IMPORTHTML</code> in Google Sheets</td><td>Google couldn't fetch or read the page</td><td>Copy and paste, or ask Claude to read the table (Module 04)</td></tr>
             <tr><td>Apps Script notes "Stopped at the time limit"</td><td>Too many stations for one 6-minute run</td><td>Set <code>STATION_IDS</code> to fewer stations, or split the state across two scripts</td></tr>
             <tr><td>Claude's browser script "timed out"</td><td>About 45 seconds per script</td><td>Ask Claude to run it in the background and check back</td></tr>
@@ -1573,6 +1679,7 @@ Then tell me which numbers you are least sure you read correctly.</pre></div>
           <li>IMD, Local Weather Report &amp; Forecast: <a href="https://city.imd.gov.in/citywx/responsive/" target="_blank" rel="noopener">https://city.imd.gov.in/citywx/responsive/</a></li>
           <li>IMD, Extreme &amp; Climatological Data, New Delhi-Safdarjung: <a href="https://city.imd.gov.in/citywx/extreme/climate.php?id=42182" target="_blank" rel="noopener">https://city.imd.gov.in/citywx/extreme/climate.php?id=42182</a></li>
           <li>IMD, Regional Meteorological Centre New Delhi, data supply procedure: <a href="https://mausamaudit.imd.gov.in/newdelhi/docs/data-procedure.pdf" target="_blank" rel="noopener">https://mausamaudit.imd.gov.in/newdelhi/docs/data-procedure.pdf</a></li>
+          <li>IITM, Air Quality Early Warning System for Delhi: <a href="https://ews.tropmet.res.in/" target="_blank" rel="noopener">https://ews.tropmet.res.in/</a>; analysis page: <a href="https://ews.tropmet.res.in/analysis.php" target="_blank" rel="noopener">https://ews.tropmet.res.in/analysis.php</a></li>
           <li>CCAC resource library (pattern and rate-limit lessons): <a href="https://www.ccacoalition.org/resources" target="_blank" rel="noopener">https://www.ccacoalition.org/resources</a></li>
         </ul>
         <p>This course combines two drafts: an AI-first course built around IMD, and a code-first curriculum with Colab notebooks and capstone ideas. The notebooks and the Apps Script in the course repository were rewritten for this version to fix problems found in review.</p>
@@ -1590,7 +1697,7 @@ Then tell me which numbers you are least sure you read correctly.</pre></div>
 <script>
 (function(){
   var STATES = {"Andaman & Nicobar":5,"Andhra Pradesh":27,"Arunachal Pradesh":11,"Assam":30,"Bihar":39,"Chhatisgarh":34,"Delhi":18,"Diu":1,"Goa":11,"Gujarat":63,"Haryana":107,"Himachal Pradesh":69,"Jammu & Kashmir":74,"Jharkhand":38,"Karnataka":42,"Kerala":21,"Ladakh UT":8,"Lakshadweep":5,"Madhya Pradesh":136,"Maharashtra":106,"Manipur":2,"Meghalaya":4,"Mizoram":5,"Nagaland":20,"Orissa":90,"Pondicherry":3,"Punjab":82,"Rajasthan":154,"Sikkim":15,"Tamil Nadu":149,"Telangana":67,"Tripura":3,"Uttar Pradesh":154,"Uttrakhand":92,"West Bengal":44};
-  var MODS = ['m0','m1','m2','m3','m4','m5','m6','m7','m8','m9','m10'];
+  var MODS = ['m0','m1','m2','m3','m4','m5','m6','m7','m8','m9','m10','m11'];
   var KEY = 'ceew-scraping-course-v3';
   var practice = function(n){ return n >= 10 && n <= 45; };
   var me = { state: '', modules: {} };
